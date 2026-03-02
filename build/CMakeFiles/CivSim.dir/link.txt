@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/CivSim.dir/link.d CMakeFiles/CivSim.dir/src/main.cpp.o -o CivSim  /usr/lib/libraylib.so -L/usr/lib -lraylib

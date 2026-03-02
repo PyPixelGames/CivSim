@@ -1,0 +1,3 @@
+/home/luka/projects/CivSim/build/CMakeFiles/CivSim.dir
+/home/luka/projects/CivSim/build/CMakeFiles/edit_cache.dir
+/home/luka/projects/CivSim/build/CMakeFiles/rebuild_cache.dir
