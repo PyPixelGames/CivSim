@@ -19,7 +19,7 @@ int64_t getKey(int cx, int cy) {
 Chunk makeChunk() {
 	Chunk c;
 	for (int i = 0; i < chunkW * chunkH; i++) {
-		c.tiles[i] = 'Z';
+		c.tiles[i] = '`';
 		c.colors[i] = Color{52, 52, 52, 255};
 	}
 	return c;
@@ -74,7 +74,6 @@ void changeTile(std::unordered_map<int64_t, Chunk>& world, int x, int y, int cod
 
 
 int main() {
-
 	SetConfigFlags(FLAG_FULLSCREEN_MODE);
 	InitWindow(0, 0, "raylib window");
 
@@ -88,12 +87,11 @@ int main() {
 	// ASCII
 	for (int i = 32; i < 127; i++) codepoints.push_back(i);
 
-	Font jet = LoadFontEx("../src/fonts/KreativeSquare.ttf",baseFontSize,
+	Font jet = LoadFontEx("../src/fonts/AsciiFont.ttf",baseFontSize,
 			codepoints.data(),codepoints.size());
-
-
 	SetTextureFilter(jet.texture, TEXTURE_FILTER_POINT);
 	Shader sdfShader = LoadShader(0, "shaders/sdf.fs");
+
 
 	short int cellSize = 32;
 	int worldX = 0; int worldY = 0;
@@ -103,8 +101,10 @@ int main() {
 	auto [cellW, cellH] = resize(cellSize, jet);
 
 	populateInitialChunks(world, worldX, worldY, width, height, cellW, cellH);
-
-	changeTile(world, 5, 5, '>', GREEN);
+	
+	changeTile(world, 4, 5, 'R', PURPLE);
+	changeTile(world, 5, 5, 'E', RED);
+	changeTile(world, 6, 5, 'D', GREEN);
 
 	while (!WindowShouldClose()) {
 		BeginDrawing();
