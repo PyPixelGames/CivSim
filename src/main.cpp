@@ -19,7 +19,7 @@ int64_t getKey(int cx, int cy) {
 Chunk makeChunk() {
 	Chunk c;
 	for (int i = 0; i < chunkW * chunkH; i++) {
-		c.tiles[i] = '`';
+		c.tiles[i] = '*';
 		c.colors[i] = Color{52, 52, 52, 255};
 	}
 	return c;
@@ -109,7 +109,11 @@ int main() {
 
 	std::unordered_map<int64_t, Chunk> world;
 
-	auto [cellW, cellH] = resize(cellSize, font);
+	int cellW, cellH;
+
+	std::pair<int,int> dims = resize(cellSize, font);
+	cellW = dims.first;
+	cellH = dims.second;
 
 	populateInitialChunks(world, worldX, worldY, width, height, cellW, cellH);
 
@@ -117,7 +121,37 @@ int main() {
 	changeTiles(world, 5, 6, "|#|", std::vector<Color>{RED, GREEN, RED});
 	changeTiles(world, 5, 7, "---", std::vector<Color>{RED});
 
+	int sizeChange=4;
+	int movingSpeed=1;
+
 	while (!WindowShouldClose()) {
+		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+			cellSize+=sizeChange;
+
+			std::pair<int,int> dims = resize(cellSize, font);
+			cellW = dims.first;
+			cellH = dims.second;
+		}
+		if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+			if(cellSize-sizeChange>8){
+				cellSize-=sizeChange;
+
+				std::pair<int,int> dims = resize(cellSize, font);
+				cellW = dims.first;
+				cellH = dims.second;
+			}
+		}
+		if (IsKeyPressed(KEY_D)){
+			worldX+=movingSpeed;	
+		}else if (IsKeyPressed(KEY_A) && worldX>=movingSpeed){
+			worldX-=movingSpeed;		
+		}if (IsKeyPressed(KEY_S)){
+			worldY+=movingSpeed;	
+		}else if (IsKeyPressed(KEY_W) && worldY>=movingSpeed){
+			worldY-=movingSpeed;		
+		}
+
+
 		BeginDrawing();
 		ClearBackground(BLACK);
 		BeginShaderMode(sdfShader);
