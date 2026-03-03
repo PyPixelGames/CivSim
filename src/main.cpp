@@ -19,8 +19,8 @@ int64_t getKey(int cx, int cy) {
 Chunk makeChunk() {
 	Chunk c;
 	for (int i = 0; i < chunkW * chunkH; i++) {
-		c.tiles[i] = '*';
-		c.colors[i] = GRAY;
+		c.tiles[i] = 'Z';
+		c.colors[i] = Color{52, 52, 52, 255};
 	}
 	return c;
 }
@@ -31,8 +31,10 @@ std::pair<int, int> resize(int cellSize, Font font){
 
 	float scale = (float)cellSize / font.baseSize;
 
-	int cellW = (int)(advance * scale + 0.5f);
-	int cellH = (int)((font.baseSize - font.glyphs[GetGlyphIndex(font,'A')].offsetY) * scale);
+	int gap = 4; //increase this value to decrease the gap size
+
+	int cellW = (int)((advance - font.glyphs[GetGlyphIndex(font,'A')].offsetX)*scale)-gap;
+	int cellH = (int)((font.baseSize - font.glyphs[GetGlyphIndex(font,'A')].offsetY) * scale)-gap;
 
 	return {cellW, cellH};
 }
@@ -86,7 +88,7 @@ int main() {
 	// ASCII
 	for (int i = 32; i < 127; i++) codepoints.push_back(i);
 
-	Font jet = LoadFontEx("../src/fonts/JetBrainsMonoNLNerdFontMono-Regular.ttf",baseFontSize,
+	Font jet = LoadFontEx("../src/fonts/KreativeSquare.ttf",baseFontSize,
 			codepoints.data(),codepoints.size());
 
 
@@ -102,7 +104,7 @@ int main() {
 
 	populateInitialChunks(world, worldX, worldY, width, height, cellW, cellH);
 
-	changeTile(world, 35, 35, '>', GREEN);
+	changeTile(world, 5, 5, '>', GREEN);
 
 	while (!WindowShouldClose()) {
 		BeginDrawing();
