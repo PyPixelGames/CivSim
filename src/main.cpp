@@ -61,15 +61,25 @@ void populateInitialChunks(std::unordered_map<int64_t, Chunk>& world,int worldX,
 	}
 }
 
-void changeTile(std::unordered_map<int64_t, Chunk>& world, int x, int y, int codepoint, Color color){
+
+void changeTiles(std::unordered_map<int64_t, Chunk>& world, int x, int y, const std::string& str,
+		const std::vector<Color>& colors){
+	bool singleColor = (colors.size() == 1);
+
 	int cx = x / chunkW;
 	int cy = y / chunkH;
+	int64_t key = getKey(cx, cy);
+
+	Chunk& chunk = world[key];
+
 	int lx = x - cx * chunkW;
 	int ly = y - cy * chunkH;
-	int idx = ly * chunkW + lx;
-	int64_t key = getKey(cx, cy);
-	world[key].tiles[idx] = codepoint;
-	world[key].colors[idx] = color;
+
+	for (size_t i = 0; i < str.size(); i++) {
+		int idx = ly * chunkW + (lx + i);
+		chunk.tiles[idx] = (int)str[i];
+		chunk.colors[idx] = singleColor ? colors[0] : colors[i];
+	}
 }
 
 
@@ -80,17 +90,18 @@ int main() {
 	int width = GetScreenWidth();
 	int height = GetScreenHeight();
 
-	const int baseFontSize = 256;
+	const int baseFontSize = 64;
 
 	std::vector<int> codepoints;
 
-	// ASCII
-	for (int i = 32; i < 127; i++) codepoints.push_back(i);
+	std::cout << "Working dir: " << GetWorkingDirectory() << "\n";
 
-	Font jet = LoadFontEx("../src/fonts/AsciiFont.ttf",baseFontSize,
+
+	for (int i = 32; i < 127; i++) codepoints.push_back(i);
+	Font font = LoadFontEx("../src/fonts/AsciiFont.ttf",baseFontSize,
 			codepoints.data(),codepoints.size());
-	SetTextureFilter(jet.texture, TEXTURE_FILTER_POINT);
-	Shader sdfShader = LoadShader(0, "shaders/sdf.fs");
+	SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
+	Shader sdfShader = LoadShader(0, "/home/luka/projects/CivSim/src/shaders/sdf.fs");
 
 
 	short int cellSize = 32;
@@ -98,13 +109,13 @@ int main() {
 
 	std::unordered_map<int64_t, Chunk> world;
 
-	auto [cellW, cellH] = resize(cellSize, jet);
+	auto [cellW, cellH] = resize(cellSize, font);
 
 	populateInitialChunks(world, worldX, worldY, width, height, cellW, cellH);
-	
-	changeTile(world, 4, 5, 'R', PURPLE);
-	changeTile(world, 5, 5, 'E', RED);
-	changeTile(world, 6, 5, 'D', GREEN);
+
+	changeTiles(world, 5, 5, "---", std::vector<Color>{RED});
+	changeTiles(world, 5, 6, "|#|", std::vector<Color>{RED, GREEN, RED});
+	changeTiles(world, 5, 7, "---", std::vector<Color>{RED});
 
 	while (!WindowShouldClose()) {
 		BeginDrawing();
@@ -149,7 +160,7 @@ int main() {
 
 						int idx = y * chunkW + x;
 
-						DrawTextCodepoint(jet, chunk.tiles[idx], {(float)sx, (float)sy}, cellSize,
+						DrawTextCodepoint(font, chunk.tiles[idx], {(float)sx, (float)sy}, cellSize,
 								chunk.colors[idx]);
 					}
 				}
@@ -161,7 +172,7 @@ int main() {
 	}
 
 	UnloadShader(sdfShader);
-	UnloadFont(jet);
+	UnloadFont(font);
 	CloseWindow();
 
 	return 0;
