@@ -1,6 +1,4 @@
 #include <iostream>
-#include <unordered_map>
-#include <cstdint>
 #include <vector>
 #include <string>
 
@@ -42,20 +40,21 @@ int main() {
 	std::cout<<"population complete"<<std::endl;
 
 	std::vector<std::string> file = loadFile("../src/levels/test.txt");
-	renderFile(world, generateLevel(), 0, 0);
+	generateLevel(world, 0, 0);
+	std::cout << "generation complete" << std::endl;
 
-	int sizeChange=4;
+	int sizeChange=1;
 	int movingSpeed=1;
 
 	while (!WindowShouldClose()) {
-		if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
 			cellSize+=sizeChange;
 
 			std::pair<int,int> dims = resize(cellSize, font);
 			cellW = dims.first;
 			cellH = dims.second;
 		}
-		if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+		if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
 			if(cellSize-sizeChange>8){
 				cellSize-=sizeChange;
 
@@ -64,13 +63,13 @@ int main() {
 				cellH = dims.second;
 			}
 		}
-		if (IsKeyPressed(KEY_D)){
+		if (IsKeyDown(KEY_D)){
 			worldX+=movingSpeed;	
-		}else if (IsKeyPressed(KEY_A) && worldX>=movingSpeed){
+		}else if (IsKeyDown(KEY_A) && worldX>=movingSpeed){
 			worldX-=movingSpeed;	
-		}if (IsKeyPressed(KEY_S)){
+		}if (IsKeyDown(KEY_S)){
 			worldY+=movingSpeed;	
-		}else if (IsKeyPressed(KEY_W) && worldY>=movingSpeed){
+		}else if (IsKeyDown(KEY_W) && worldY>=movingSpeed){
 			worldY-=movingSpeed;		
 		}
 
