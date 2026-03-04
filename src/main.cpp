@@ -1,87 +1,11 @@
-#include "raylib.h"
 #include <iostream>
 #include <unordered_map>
 #include <cstdint>
 #include <vector>
+#include <string>
 
-constexpr int chunkW = 32;
-constexpr int chunkH = 32;
-
-struct Chunk {
-	int tiles[chunkW * chunkH];
-	Color colors[chunkW * chunkH];
-};
-
-int64_t getKey(int cx, int cy) {
-	return (int64_t(cx) << 32) | int64_t(uint32_t(cy));
-}
-
-Chunk makeChunk() {
-	Chunk c;
-	for (int i = 0; i < chunkW * chunkH; i++) {
-		c.tiles[i] = '*';
-		c.colors[i] = Color{52, 52, 52, 255};
-	}
-	return c;
-}
-
-std::pair<int, int> resize(int cellSize, Font font){
-	int glyphIndex = GetGlyphIndex(font, 'A');
-	int advance = font.glyphs[glyphIndex].advanceX;
-
-	float scale = (float)cellSize / font.baseSize;
-
-	int gap = 4; //increase this value to decrease the gap size
-
-	int cellW = (int)((advance - font.glyphs[GetGlyphIndex(font,'A')].offsetX)*scale)-gap;
-	int cellH = (int)((font.baseSize - font.glyphs[GetGlyphIndex(font,'A')].offsetY) * scale)-gap;
-
-	return {cellW, cellH};
-}
-
-void populateInitialChunks(std::unordered_map<int64_t, Chunk>& world,int worldX, int worldY,
-		int screenW, int screenH,
-		int cellW, int cellH){
-	int visibleW = screenW / cellW;
-	int visibleH = screenH / cellH;
-
-	int minChunkX = worldX / chunkW;
-	int maxChunkX = (worldX + visibleW) / chunkW;
-
-	int minChunkY = worldY / chunkH;
-	int maxChunkY = (worldY + visibleH) / chunkH;
-
-	for (int cy = minChunkY; cy <= maxChunkY; cy++) {
-		for (int cx = minChunkX; cx <= maxChunkX; cx++) {
-			int64_t key = getKey(cx, cy);
-			if (world.find(key) == world.end()) {
-				world[key] = makeChunk();
-			}
-		}
-	}
-}
-
-
-void changeTiles(std::unordered_map<int64_t, Chunk>& world, int x, int y, const std::string& str,
-		const std::vector<Color>& colors){
-	bool singleColor = (colors.size() == 1);
-
-	int cx = x / chunkW;
-	int cy = y / chunkH;
-	int64_t key = getKey(cx, cy);
-
-	Chunk& chunk = world[key];
-
-	int lx = x - cx * chunkW;
-	int ly = y - cy * chunkH;
-
-	for (size_t i = 0; i < str.size(); i++) {
-		int idx = ly * chunkW + (lx + i);
-		chunk.tiles[idx] = (int)str[i];
-		chunk.colors[idx] = singleColor ? colors[0] : colors[i];
-	}
-}
-
+#include "types.hpp"
+#include "helper.hpp"
 
 int main() {
 	SetConfigFlags(FLAG_FULLSCREEN_MODE);
@@ -90,12 +14,9 @@ int main() {
 	int width = GetScreenWidth();
 	int height = GetScreenHeight();
 
-	const int baseFontSize = 64;
+	const int baseFontSize = 256;
 
 	std::vector<int> codepoints;
-
-	std::cout << "Working dir: " << GetWorkingDirectory() << "\n";
-
 
 	for (int i = 32; i < 127; i++) codepoints.push_back(i);
 	Font font = LoadFontEx("../src/fonts/AsciiFont.ttf",baseFontSize,
@@ -117,9 +38,9 @@ int main() {
 
 	populateInitialChunks(world, worldX, worldY, width, height, cellW, cellH);
 
-	changeTiles(world, 5, 5, "---", std::vector<Color>{RED});
-	changeTiles(world, 5, 6, "|#|", std::vector<Color>{RED, GREEN, RED});
-	changeTiles(world, 5, 7, "---", std::vector<Color>{RED});
+	std::vector<std::string> file = loadFile("../src/levels/test.txt");
+	renderFile(world, file, 5, 5);
+
 
 	int sizeChange=4;
 	int movingSpeed=1;
@@ -194,7 +115,7 @@ int main() {
 
 						int idx = y * chunkW + x;
 
-						DrawTextCodepoint(font, chunk.tiles[idx], {(float)sx, (float)sy}, cellSize,
+						DrawTextCodepoint(font, chunk.codepoints[idx], {(float)sx, (float)sy}, cellSize,
 								chunk.colors[idx]);
 					}
 				}
