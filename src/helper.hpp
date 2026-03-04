@@ -12,7 +12,7 @@ inline int64_t getKey(int cx, int cy) {
 Chunk makeChunk() {
 	Chunk c;
 	for (int i = 0; i < chunkW * chunkH; i++) {
-		c.codepoints[i] = '*';
+		c.codepoints[i] = '`';
 		c.colors[i] = Color{52, 52, 52, 255};
 	}
 	return c;
@@ -32,19 +32,9 @@ std::pair<int, int> resize(int cellSize, Font font){
 	return {cellW, cellH};
 }
 
-void populateInitialChunks(std::unordered_map<int64_t, Chunk>& world,int worldX, int worldY,
-		int screenW, int screenH, int cellW, int cellH){
-	int visibleW = screenW / cellW;
-	int visibleH = screenH / cellH;
-
-	int minChunkX = worldX / chunkW;
-	int maxChunkX = (worldX + visibleW) / chunkW;
-
-	int minChunkY = worldY / chunkH;
-	int maxChunkY = (worldY + visibleH) / chunkH;
-
-	for (int cy = minChunkY; cy <= maxChunkY; cy++) {
-		for (int cx = minChunkX; cx <= maxChunkX; cx++) {
+void populateChunks(std::unordered_map<int64_t, Chunk>& world,int chunksX, int chunksY){
+	for (int cy = 0; cy < chunksY; cy++) {
+		for (int cx = 0; cx < chunksX; cx++) {
 			int64_t key = getKey(cx, cy);
 			if (world.find(key) == world.end()) {
 				world[key] = makeChunk();
@@ -53,28 +43,44 @@ void populateInitialChunks(std::unordered_map<int64_t, Chunk>& world,int worldX,
 	}
 }
 
-void changeTiles(std::unordered_map<int64_t, Chunk>& world,int x, int y,const std::string& str,
-		const std::vector<Color>& colors){
+void changeTiles(std::unordered_map<int64_t, Chunk>& world, int x, int y, const std::string& str, const std::vector<Color>& colors) {
+	if (str.empty() || colors.empty()) return;
+
 	bool singleColor = (colors.size() == 1);
+	int cy = (y >= 0) ? (y / chunkH) : ((y - chunkH + 1) / chunkH);
+	int ly = y - (cy * chunkH);
 
-	int cx = x / chunkW;
-	int cy = y / chunkH;
-	int64_t key = getKey(cx, cy);
+	if (ly < 0 || ly >= chunkH) return;
+	int rowOffset = ly * chunkW;
 
-	Chunk& chunk = world[key];
+	int currentX = x;
+	size_t i = 0;
 
-	int lx = x - cx * chunkW;
-	int ly = y - cy * chunkH;
+	while (i < str.size()) {
+		int cx = (currentX >= 0) ? (currentX / chunkW) : ((currentX - chunkW + 1) / chunkW);
+		int lx = currentX - (cx * chunkW);
 
-	for (size_t i = 0; i < str.size(); i++) {
-		int idx = ly * chunkW + (lx + i);
-		chunk.codepoints[idx] = str[i];
-		chunk.colors[idx] = singleColor ? colors[0] : colors[i];
+		int64_t key = getKey(cx, cy);
+		Chunk& chunk = world[key];
+
+		int spaceInChunk = chunkW - lx;
+		int charsToProcess = ((int)(str.size() - i) < spaceInChunk) ? (int)(str.size() - i) : spaceInChunk;
+
+		for (int j = 0; j < charsToProcess; j++) {
+			int idx = rowOffset + lx + j;
+			chunk.codepoints[idx] = str[i + j];
+			chunk.colors[idx] = singleColor ? colors[0] : colors[i + j];
+		}
+
+		i += charsToProcess;
+		currentX += charsToProcess;
 	}
 }
 
-void renderFile(std::unordered_map<int64_t,Chunk>& world,std::vector<std::string>content,int x,int y){
-	for (size_t i=0; i<content.size(); i++){
-		changeTiles(world, x, y+i, content[i], std::vector<Color>{RED});
+void renderFile(std::unordered_map<int64_t, Chunk>& world, const std::vector<std::string>& content, 
+		int x, int y) {
+	static const std::vector<Color> RED_VEC = { RED };
+	for (size_t i = 0; i < content.size(); i++) {
+		changeTiles(world, x, y + i, content[i], RED_VEC);
 	}
 }

@@ -28,7 +28,5 @@ std::vector<std::string> loadFile(std::string filename, char delim='g'){
 	content.erase(std::remove(content.begin(), content.end(), '\n'), content.end()); 
 	content.erase(std::remove(content.begin(), content.end(), '\r'), content.end());
 
-	std::cout<<split(content, delim)[2]<<std::endl;
-
 	return split(content, delim);
 }

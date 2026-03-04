@@ -6,6 +6,7 @@
 
 #include "types.hpp"
 #include "helper.hpp"
+#include "levelGeneration.hpp"
 
 int main() {
 	SetConfigFlags(FLAG_FULLSCREEN_MODE);
@@ -36,11 +37,12 @@ int main() {
 	cellW = dims.first;
 	cellH = dims.second;
 
-	populateInitialChunks(world, worldX, worldY, width, height, cellW, cellH);
+	populateChunks(world, 340, 340);
+
+	std::cout<<"population complete"<<std::endl;
 
 	std::vector<std::string> file = loadFile("../src/levels/test.txt");
-	renderFile(world, file, 5, 5);
-
+	renderFile(world, generateLevel(), 0, 0);
 
 	int sizeChange=4;
 	int movingSpeed=1;
@@ -65,7 +67,7 @@ int main() {
 		if (IsKeyPressed(KEY_D)){
 			worldX+=movingSpeed;	
 		}else if (IsKeyPressed(KEY_A) && worldX>=movingSpeed){
-			worldX-=movingSpeed;		
+			worldX-=movingSpeed;	
 		}if (IsKeyPressed(KEY_S)){
 			worldY+=movingSpeed;	
 		}else if (IsKeyPressed(KEY_W) && worldY>=movingSpeed){
@@ -90,9 +92,9 @@ int main() {
 			for (int cx = minChunkX; cx <= maxChunkX; cx++) {
 				int64_t key = getKey(cx, cy);
 
-				if (world.find(key) == world.end()) {
-					world[key] = makeChunk();
-				}
+				//if (world.find(key) == world.end()) {
+				//	world[key] = makeChunk();
+				//}
 
 				Chunk &chunk = world[key];
 
@@ -115,8 +117,8 @@ int main() {
 
 						int idx = y * chunkW + x;
 
-						DrawTextCodepoint(font, chunk.codepoints[idx], {(float)sx, (float)sy}, cellSize,
-								chunk.colors[idx]);
+						DrawTextCodepoint(font, chunk.codepoints[idx],{(float)sx,(float)sy},cellSize,
+							chunk.colors[idx]);
 					}
 				}
 			}

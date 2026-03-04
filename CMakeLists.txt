@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(raylib REQUIRED)
 
-file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.h")
+file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.hpp" "src/*.h")
 
 add_executable(${PROJECT_NAME} ${SOURCES})
 
