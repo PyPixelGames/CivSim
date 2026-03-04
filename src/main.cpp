@@ -78,8 +78,8 @@ int main() {
 		ClearBackground(BLACK);
 		BeginShaderMode(sdfShader);
 
-		int visibleW = width / cellW;
-		int visibleH = height / cellH;
+		int visibleW = (width / cellW)+1;
+		int visibleH = (height / cellH)+1;
 
 		int minChunkX = worldX / chunkW;
 		int maxChunkX = (worldX + visibleW) / chunkW;
@@ -122,6 +122,8 @@ int main() {
 				}
 			}
 		}
+
+		DrawFPS(1, 1);
 
 		EndShaderMode();
 		EndDrawing();
