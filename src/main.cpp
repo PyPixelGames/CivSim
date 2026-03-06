@@ -1,4 +1,5 @@
 #include <iostream>
+#include <raylib.h>
 #include <vector>
 #include <string>
 
@@ -35,29 +36,27 @@ int main() {
 	cellW = dims.first;
 	cellH = dims.second;
 
-	populateChunks(world, 340, 340);
+	int generateSize = 32;
+	populateChunks(world, 30, 30, font, 32);
 
 	std::cout<<"population complete"<<std::endl;
 
-	std::vector<std::string> file = loadFile("../src/levels/test.txt");
-	generateLevel(world, 0, 0);
+	generateLevel(world, 0, 0, font, 32);
 	std::cout << "generation complete" << std::endl;
 
 	int sizeChange=1;
-	int movingSpeed=1;
+	int movingSpeed=5;
 
 	while (!WindowShouldClose()) {
 		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-			cellSize+=sizeChange;
-
+			cellSize += sizeChange;
 			std::pair<int,int> dims = resize(cellSize, font);
 			cellW = dims.first;
 			cellH = dims.second;
 		}
 		if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-			if(cellSize-sizeChange>8){
-				cellSize-=sizeChange;
-
+			if (cellSize - sizeChange > 8) {
+				cellSize -= sizeChange;
 				std::pair<int,int> dims = resize(cellSize, font);
 				cellW = dims.first;
 				cellH = dims.second;
@@ -76,62 +75,53 @@ int main() {
 
 		BeginDrawing();
 		ClearBackground(BLACK);
-		BeginShaderMode(sdfShader);
 
-		int visibleW = (width / cellW)+1;
-		int visibleH = (height / cellH)+1;
+		int pixelOffsetX = worldX % (chunkW * cellSize);
+		int pixelOffsetY = worldY % (chunkH * cellSize);
 
-		int minChunkX = worldX / chunkW;
-		int maxChunkX = (worldX + visibleW) / chunkW;
-
-		int minChunkY = worldY / chunkH;
-		int maxChunkY = (worldY + visibleH) / chunkH;
+		int minChunkX = worldX / (chunkW * cellSize);
+		int maxChunkX = minChunkX + (width / (chunkW * cellSize)) + 2;
+		int minChunkY = worldY / (chunkH * cellSize);
+		int maxChunkY = minChunkY + (height / (chunkH * cellSize)) + 2;
 
 		for (int cy = minChunkY; cy <= maxChunkY; cy++) {
 			for (int cx = minChunkX; cx <= maxChunkX; cx++) {
 				int64_t key = getKey(cx, cy);
+				if (world.find(key) == world.end()) continue;
 
-				//if (world.find(key) == world.end()) {
-				//	world[key] = makeChunk();
-				//}
+				Chunk& chunk = world[key];
 
-				Chunk &chunk = world[key];
+				int destX = cx * chunkW * cellSize - worldX;
+				int destY = cy * chunkH * cellSize - worldY;
+				int destW = chunkW * cellSize;
+				int destH = chunkH * cellSize;
 
-				int chunkOffsetX = cx * chunkW;
-				int chunkOffsetY = cy * chunkH;
+				Rectangle src = {
+					0.0f, 0.0f,
+					(float)chunk.tex.texture.width,
+					-(float)chunk.tex.texture.height
+				};
+				Rectangle dst = {
+					(float)destX, (float)destY,
+					(float)destW, (float)destH
+				};
 
-				for (int y = 0; y < chunkH; y++) {
-					for (int x = 0; x < chunkW; x++) {
-						int wx = chunkOffsetX + x;
-						int wy = chunkOffsetY + y;
-
-						if (wx < worldX || wy < worldY ||
-								wx >= worldX + visibleW ||
-								wy >= worldY + visibleH){
-							continue;
-						}
-
-						int sx = (wx - worldX) * cellW;
-						int sy = (wy - worldY) * cellH;
-
-						int idx = y * chunkW + x;
-
-						DrawTextCodepoint(font, chunk.codepoints[idx],{(float)sx,(float)sy},cellSize,
-							chunk.colors[idx]);
-					}
-				}
+				DrawTexturePro(chunk.tex.texture, src, dst, {0, 0}, 0.0f, WHITE);
 			}
 		}
-
 		DrawFPS(1, 1);
 
-		EndShaderMode();
 		EndDrawing();
 	}
 
 	UnloadShader(sdfShader);
 	UnloadFont(font);
-	CloseWindow();
+	for (auto& [key, chunk] : world){
+		UnloadRenderTexture(chunk.tex);
+	}
+	CloseWindow();  // last
+
+	std::cout << "unloaded" << std::endl;
 
 	return 0;
 }

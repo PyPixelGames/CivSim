@@ -1,15 +1,18 @@
 #include "helper.hpp"
+#include <raylib.h>
+#include <rlgl.h>
 
 int64_t getKey(int cx, int cy) {
 	return (int64_t(cx) << 32) | int64_t(uint32_t(cy));
 }
 
-Chunk makeChunk() {
+Chunk makeChunk(Font font,int s) {
 	Chunk c;
 	for (int i = 0; i < chunkW * chunkH; i++) {
 		c.codepoints[i] = '`';
 		c.colors[i] = Color{52, 52, 52, 255};
 	}
+	//c.tex = chunkTex(c, font, s);
 	return c;
 }
 
@@ -27,78 +30,44 @@ std::pair<int, int> resize(int cellSize, Font font){
 	return {cellW, cellH};
 }
 
-void populateChunks(std::unordered_map<int64_t, Chunk>& world,int chunksX, int chunksY){
+void populateChunks(std::unordered_map<int64_t, Chunk>& world,int chunksX,int chunksY,Font font,int s){
 	for (int cy = 0; cy < chunksY; cy++) {
 		for (int cx = 0; cx < chunksX; cx++) {
 			int64_t key = getKey(cx, cy);
 			if (world.find(key) == world.end()) {
-				world[key] = makeChunk();
+				world[key] = makeChunk(font, s);
 			}
 		}
 	}
 }
 
-void changeTiles(std::unordered_map<int64_t, Chunk>& world, int x, int y, const std::string& str, const std::vector<Color>& colors) {
-	if (str.empty() || colors.empty()) return;
-
-	bool singleColor = (colors.size() == 1);
-	int cy = (y >= 0) ? (y / chunkH) : ((y - chunkH + 1) / chunkH);
-	int ly = y - (cy * chunkH);
-
-	if (ly < 0 || ly >= chunkH) return;
-	int rowOffset = ly * chunkW;
-
-	int currentX = x;
-	size_t i = 0;
-
-	while (i < str.size()) {
-		int cx = (currentX >= 0) ? (currentX / chunkW) : ((currentX - chunkW + 1) / chunkW);
-		int lx = currentX - (cx * chunkW);
-
-		int64_t key = getKey(cx, cy);
-		Chunk& chunk = world[key];
-
-		int spaceInChunk = chunkW - lx;
-		int charsToProcess = ((int)(str.size() - i) < spaceInChunk) ? (int)(str.size() - i) : spaceInChunk;
-
-		for (int j = 0; j < charsToProcess; j++) {
-			int idx = rowOffset + lx + j;
-			chunk.codepoints[idx] = str[i + j];
-			chunk.colors[idx] = singleColor ? colors[0] : colors[i + j];
-		}
-
-		i += charsToProcess;
-		currentX += charsToProcess;
-	}
-}
-
-void renderFile(std::unordered_map<int64_t, Chunk>& world, const std::vector<std::string>& content, 
-		int x, int y) {
-	static const std::vector<Color> RED_VEC = { RED };
-	for (size_t i = 0; i < content.size(); i++) {
-		changeTiles(world, x, y + i, content[i], RED_VEC);
-	}
-}
-
 std::vector<std::string> split(const std::string& s, char delim) {
-    std::vector<std::string> parts;
-    std::stringstream ss(s);
-    std::string item;
+	std::vector<std::string> parts;
+	std::stringstream ss(s);
+	std::string item;
 
-    while (std::getline(ss, item, delim)) {
-        parts.push_back(item);
-    }
-    return parts;
+	while (std::getline(ss, item, delim)) {
+		parts.push_back(item);
+	}
+	return parts;
 }
 
-std::vector<std::string> loadFile(std::string filename, char delim){
-	std::ifstream file(filename);
-	std::stringstream buffer;
-	buffer << file.rdbuf();
-	std::string content = buffer.str();
 
-	content.erase(std::remove(content.begin(), content.end(), '\n'), content.end()); 
-	content.erase(std::remove(content.begin(), content.end(), '\r'), content.end());
+RenderTexture2D chunkTex(Chunk& chunk, Font font, int bakeSize){
+	RenderTexture2D tex = LoadRenderTexture(bakeSize * chunkW, bakeSize * chunkH);
 
-	return split(content, delim);
+	BeginTextureMode(tex);
+	rlViewport(0, 0, tex.texture.width, tex.texture.height);
+	ClearBackground(BLACK);
+
+	for (size_t i = 0; i < std::size(chunk.codepoints); i++){
+		int x = i % chunkW;
+		int y = i / chunkW;
+		DrawTextCodepoint(font, chunk.codepoints[i],
+				{(float)x * bakeSize, (float)y * bakeSize},
+				bakeSize,
+				chunk.colors[i]);
+	}
+	EndTextureMode();
+	return tex;
 }
