@@ -7,6 +7,8 @@
 #include "helper.hpp"
 #include "levelGeneration.hpp"
 
+using namespace Colors;
+
 int main() {
 	if (!SDL_Init(SDL_INIT_VIDEO)) {
 		std::cerr << "SDL_Init failed: " << SDL_GetError() << "\n";
@@ -76,6 +78,9 @@ int main() {
 	bool running = true;
 	SDL_Event event;
 
+	int test=0;
+	int time=0;
+
 	while (running) {
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_EVENT_QUIT) {
@@ -116,6 +121,22 @@ int main() {
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderClear(renderer);
 
+		if (test<32){
+			if (time>=6000){
+				test++;
+				time=0;
+				EditCell cell;
+				cell.x=test;
+				cell.y=test;
+				cell.c = Colors::LIME;
+				cell.ch='!';
+
+				world[0].cells.push_back(cell);
+			}else{
+				time++;	
+			}
+		}
+
 		int minChunkX = worldX / (chunkW * cellSize);
 		int maxChunkX = minChunkX + (width  / (chunkW * cellSize)) + 2;
 		int minChunkY = worldY / (chunkH * cellSize);
@@ -128,8 +149,9 @@ int main() {
 
 				Chunk& chunk = world[key];
 
-				if (!chunk.cells.empty())
+				if (!chunk.cells.empty()){
 					editTex(renderer, chunk, font, bakeSize);
+				}
 
 				float destX = (float)(cx * chunkW * cellSize - worldX);
 				float destY = (float)(cy * chunkH * cellSize - worldY);
