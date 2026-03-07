@@ -3,20 +3,29 @@
 #include <unordered_map>
 #include <cstdint>
 #include <string>
-#include <algorithm>
-#include <fstream>
-#include <sstream>
+#include <vector>
 
 int64_t getKey(int cx, int cy);
 
-Chunk makeChunk(Font font, int s);
+Chunk makeChunk(GameFont& font, int s);
 
-std::pair<int, int> resize(int cellSize, Font font);
+std::pair<int, int> resize(int cellSize, GameFont& font);
 
-void populateChunks(std::unordered_map<int64_t,Chunk>& world,int chunksX,int chunksY,Font font,int s);
+void populateChunks(std::unordered_map<int64_t, Chunk>& world,
+		int chunksX, int chunksY,
+		GameFont& font, int s);
 
 std::vector<std::string> split(const std::string& s, char delim);
 
-RenderTexture2D chunkTex(Chunk& chunk, Font font, int bakeSize);
+void drawGlyph(SDL_Renderer* renderer, GameFont& font,
+		int codepoint, float x, float y, int cellSize,
+		SDL_Color color);
 
-RenderTexture2D editTex(Chunk& chunk, Font font, int bakeSize);
+SDL_Texture* chunkTex(SDL_Renderer* renderer, Chunk& chunk,
+		GameFont& font, int bakeSize);
+
+void editTex(SDL_Renderer* renderer, Chunk& chunk,
+		GameFont& font, int bakeSize);
+
+void drawFPS(SDL_Renderer* renderer, GameFont& font,
+		float fps, int x, int y);

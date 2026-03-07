@@ -1,92 +1,157 @@
 #include "helper.hpp"
-#include <raylib.h>
-#include <rlgl.h>
+#include <sstream>
 
 int64_t getKey(int cx, int cy) {
 	return (int64_t(cx) << 32) | int64_t(uint32_t(cy));
 }
 
-Chunk makeChunk(Font font,int s) {
+Chunk makeChunk(GameFont& /*font*/, int /*s*/) {
 	Chunk c;
 	for (int i = 0; i < chunkW * chunkH; i++) {
 		c.codepoints[i] = '`';
-		c.colors[i] = Color{52, 52, 52, 255};
+		c.colors[i]     = {52, 52, 52, 255};
 	}
-	//c.tex = chunkTex(c, font, s);
+	c.tex = nullptr;
 	return c;
 }
 
-std::pair<int, int> resize(int cellSize, Font font){
-	int glyphIndex = GetGlyphIndex(font, 'A');
-	int advance = font.glyphs[glyphIndex].advanceX;
-
-	float scale = (float)cellSize / font.baseSize;
-
-	int gap = 4; //increase this value to decrease the gap size
-
-	int cellW = (int)((advance - font.glyphs[GetGlyphIndex(font,'A')].offsetX)*scale)-gap;
-	int cellH = (int)((font.baseSize - font.glyphs[GetGlyphIndex(font,'A')].offsetY) * scale)-gap;
-
+std::pair<int, int> resize(int cellSize, GameFont& font) {
+	int minx, maxx, miny, maxy, advance;
+	if (!TTF_GetGlyphMetrics(font.ttf, 'A',
+				&minx, &maxx, &miny, &maxy, &advance)) {
+		return {cellSize, cellSize};
+	}
+	float scale = (float)cellSize / (float)font.baseSize;
+	int gap    = 4;
+	int cellW  = (int)((advance - minx) * scale) - gap;
+	int cellH  = (int)(font.baseSize       * scale) - gap;
 	return {cellW, cellH};
 }
 
-void populateChunks(std::unordered_map<int64_t, Chunk>& world,int chunksX,int chunksY,Font font,int s){
-	for (int cy = 0; cy < chunksY; cy++) {
+void populateChunks(std::unordered_map<int64_t, Chunk>& world,int chunksX, int chunksY,GameFont& font,
+		int s) {
+	for (int cy = 0; cy < chunksY; cy++)
 		for (int cx = 0; cx < chunksX; cx++) {
 			int64_t key = getKey(cx, cy);
-			if (world.find(key) == world.end()) {
+			if (world.find(key) == world.end())
 				world[key] = makeChunk(font, s);
-			}
 		}
-	}
 }
 
 std::vector<std::string> split(const std::string& s, char delim) {
 	std::vector<std::string> parts;
 	std::stringstream ss(s);
 	std::string item;
-
-	while (std::getline(ss, item, delim)) {
+	while (std::getline(ss, item, delim))
 		parts.push_back(item);
-	}
 	return parts;
 }
 
+void drawGlyph(SDL_Renderer* renderer, GameFont& font,int codepoint, float x, float y, int cellSize,
+		SDL_Color color) {
+	auto it = font.glyphCache.find(codepoint);
+	SDL_Texture* tex = nullptr;
 
-RenderTexture2D chunkTex(Chunk& chunk, Font font, int bakeSize){
-	RenderTexture2D tex = LoadRenderTexture(bakeSize * chunkW, bakeSize * chunkH);
+	if (it == font.glyphCache.end()) {
+		SDL_Color white = {255, 255, 255, 255};
+		SDL_Surface* surf = TTF_RenderGlyph_Blended(font.ttf,(Uint32)codepoint,white);
+		if (!surf) return;
 
-	BeginTextureMode(tex);
-	rlViewport(0, 0, tex.texture.width, tex.texture.height);
-	ClearBackground(BLACK);
+		tex = SDL_CreateTextureFromSurface(renderer, surf);
+		SDL_DestroySurface(surf);
+		if (!tex) return;
 
-	for (size_t i = 0; i < std::size(chunk.codepoints); i++){
-		int x = i % chunkW;
-		int y = i / chunkW;
-		DrawTextCodepoint(font, chunk.codepoints[i],
-			{(float)x * bakeSize, (float)y * bakeSize},
-			bakeSize,
-		chunk.colors[i]);
+		SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
+		font.glyphCache[codepoint] = tex;
+	} else {
+		tex = it->second;
 	}
-	EndTextureMode();
+
+	SDL_SetTextureColorMod(tex, color.r, color.g, color.b);
+	SDL_SetTextureAlphaMod(tex, color.a);
+
+	SDL_FRect dst = {x, y, (float)cellSize, (float)cellSize};
+	SDL_RenderTexture(renderer, tex, nullptr, &dst);
+}
+
+SDL_Texture* chunkTex(SDL_Renderer* renderer, Chunk& chunk,GameFont& font, int bakeSize) {
+	SDL_Texture* tex = SDL_CreateTexture(renderer,
+			SDL_PIXELFORMAT_RGBA8888,
+			SDL_TEXTUREACCESS_TARGET,
+			bakeSize * chunkW,
+			bakeSize * chunkH);
+	if (!tex) return nullptr;
+	SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
+
+	SDL_SetRenderTarget(renderer, tex);
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+	SDL_RenderClear(renderer);
+
+	for (int i = 0; i < chunkW * chunkH; i++) {
+		int cx = i % chunkW;
+		int cy = i / chunkW;
+		drawGlyph(renderer, font,
+				chunk.codepoints[i],
+				(float)(cx * bakeSize),
+				(float)(cy * bakeSize),
+				bakeSize,
+				chunk.colors[i]);
+	}
+
+	SDL_SetRenderTarget(renderer, nullptr);
 	return tex;
 }
 
-RenderTexture2D editTex(Chunk& chunk, Font font, int bakeSize){
-	BeginTextureMode(chunk.tex);
+void editTex(SDL_Renderer* renderer, Chunk& chunk,
+		GameFont& font, int bakeSize) {
+	if (!chunk.tex) return;
 
-	for (auto cell : chunk.cells){
-		DrawRectangle(cell.x*bakeSize, cell.y*bakeSize, bakeSize, bakeSize, BLACK);	
-		DrawTextCodepoint(font, cell.ch,
-			{(float)cell.x * bakeSize, (float)cell.y * bakeSize},bakeSize, cell.c);
-		int	idx=cell.y*chunkW+cell.x;
+	SDL_SetRenderTarget(renderer, chunk.tex);
+
+	for (auto& cell : chunk.cells) {
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_FRect rect = {
+			(float)(cell.x * bakeSize),
+			(float)(cell.y * bakeSize),
+			(float)bakeSize,
+			(float)bakeSize
+		};
+		SDL_RenderFillRect(renderer, &rect);
+
+		drawGlyph(renderer, font,
+				cell.ch,
+				(float)(cell.x * bakeSize),
+				(float)(cell.y * bakeSize),
+				bakeSize,
+				cell.c);
+
+		int idx = cell.y * chunkW + cell.x;
 		chunk.codepoints[idx] = cell.ch;
-		chunk.colors[idx] = cell.c;
+		chunk.colors[idx]     = cell.c;
 	}
 
 	chunk.cells.clear();
+	SDL_SetRenderTarget(renderer, nullptr);
+}
 
-	EndTextureMode();
+void drawFPS(SDL_Renderer* renderer, GameFont& font,
+             float fps, int x, int y) {
+    std::string text = "FPS: " + std::to_string((int)fps);
+    SDL_Color color  = {0, 255, 40, 255};
 
-	return chunk.tex;
+    SDL_Surface* surf = TTF_RenderText_Blended(font.ttf,
+                                               text.c_str(), 0,
+                                               color);
+    if (!surf) return;
+
+    SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
+    SDL_DestroySurface(surf);
+    if (!tex) return;
+
+    float w = 0, h = 0;
+    SDL_GetTextureSize(tex, &w, &h);
+    const float scale = 0.4f;
+    SDL_FRect dst = {(float)x, (float)y, w * scale, h * scale};
+    SDL_RenderTexture(renderer, tex, nullptr, &dst);
+    SDL_DestroyTexture(tex);
 }

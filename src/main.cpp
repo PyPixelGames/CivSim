@@ -1,91 +1,123 @@
+#include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <iostream>
-#include <raylib.h>
 #include <vector>
 #include <string>
-
 #include "types.hpp"
 #include "helper.hpp"
 #include "levelGeneration.hpp"
 
 int main() {
-	SetConfigFlags(FLAG_FULLSCREEN_MODE);
-	InitWindow(0, 0, "raylib window");
+	if (!SDL_Init(SDL_INIT_VIDEO)) {
+		std::cerr << "SDL_Init failed: " << SDL_GetError() << "\n";
+		return 1;
+	}
+	if (!TTF_Init()) {
+		std::cerr << "TTF_Init failed: " << SDL_GetError() << "\n";
+		SDL_Quit();
+		return 1;
+	}
 
-	int width = GetScreenWidth();
-	int height = GetScreenHeight();
+	SDL_Window* window = SDL_CreateWindow("SDL3 CivSim", 0, 0, SDL_WINDOW_FULLSCREEN);
+	if (!window) {
+		std::cerr << "SDL_CreateWindow failed: " << SDL_GetError() << "\n";
+		TTF_Quit(); SDL_Quit();
+		return 1;
+	}
 
-	const int baseFontSize = 256;
+	SDL_Renderer* renderer = SDL_CreateRenderer(window, nullptr);
+	if (!renderer) {
+		std::cerr << "SDL_CreateRenderer failed: " << SDL_GetError() << "\n";
+		SDL_DestroyWindow(window); TTF_Quit(); SDL_Quit();
+		return 1;
+	}
+	SDL_SetRenderVSync(renderer, 1);
 
-	std::vector<int> codepoints;
+	int width = 0, height = 0;
+	SDL_GetRenderOutputSize(renderer, &width, &height);
 
-	for (int i = 32; i < 127; i++) codepoints.push_back(i);
-	Font font = LoadFontEx("../src/fonts/AsciiFont.ttf",baseFontSize,
-			codepoints.data(),codepoints.size());
-	SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);
-	Shader sdfShader = LoadShader(0, "/home/luka/projects/CivSim/src/shaders/sdf.fs");
-
+	const int bakeSize = 64;
+	GameFont font;
+	font.baseSize = bakeSize;
+	font.ttf = TTF_OpenFont("../src/fonts/AsciiFont.ttf", bakeSize);
+	if (!font.ttf) {
+		std::cerr << "TTF_OpenFont failed: " << SDL_GetError() << "\n";
+		SDL_DestroyRenderer(renderer); SDL_DestroyWindow(window);
+		TTF_Quit(); SDL_Quit();
+		return 1;
+	}
 
 	short int cellSize = 32;
-	int worldX = 0; int worldY = 0;
+	int worldX = 0;
+	int worldY = 0;
+	int sizeChange = 1;
+	int movingSpeed = 5;
 
 	std::unordered_map<int64_t, Chunk> world;
 
-	int cellW, cellH;
+	auto dims = resize(cellSize, font);
+	int cellW = dims.first;
+	int cellH = dims.second;
 
-	std::pair<int,int> dims = resize(cellSize, font);
-	cellW = dims.first;
-	cellH = dims.second;
-
-	int bakeSize = 64;
 	populateChunks(world, 30, 30, font, bakeSize);
+	std::cout << "population complete\n";
 
-	std::cout<<"population complete"<<std::endl;
+	generateLevel(world, 0, 0, renderer, font, bakeSize);
+	std::cout << "generation complete\n";
 
-	generateLevel(world, 0, 0, font, bakeSize);
-	std::cout << "generation complete" << std::endl;
+	EditCell ec;
+	ec.x = 5; ec.y = 5;
+	world[0].cells.push_back(ec);
 
-	int sizeChange=1;
-	int movingSpeed=5;
+	Uint64 fpsTimer = SDL_GetTicks();
+	int frameCount = 0;
+	float fps = 0.0f;
 
-	EditCell c;
-	c.x = 5;
-	c.y = 5;
-	world[0].cells.push_back(c);
+	bool running = true;
+	SDL_Event event;
 
-	while (!WindowShouldClose()) {
-		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-			cellSize += sizeChange;
-			std::pair<int,int> dims = resize(cellSize, font);
-			cellW = dims.first;
-			cellH = dims.second;
-		}
-		if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT)) {
-			if (cellSize - sizeChange > 8) {
-				cellSize -= sizeChange;
-				std::pair<int,int> dims = resize(cellSize, font);
-				cellW = dims.first;
-				cellH = dims.second;
+	while (running) {
+		while (SDL_PollEvent(&event)) {
+			if (event.type == SDL_EVENT_QUIT) {
+				running = false;
+			}
+			if (event.type == SDL_EVENT_KEY_DOWN) {
+				if (event.key.key == SDLK_ESCAPE) running = false;
+			}
+			if (event.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED) {
+				SDL_GetRenderOutputSize(renderer, &width, &height);
 			}
 		}
-		if (IsKeyDown(KEY_D)){
-			worldX+=movingSpeed;	
-		}else if (IsKeyDown(KEY_A) && worldX>=movingSpeed){
-			worldX-=movingSpeed;	
-		}if (IsKeyDown(KEY_S)){
-			worldY+=movingSpeed;	
-		}else if (IsKeyDown(KEY_W) && worldY>=movingSpeed){
-			worldY-=movingSpeed;		
+
+		const bool* keys = SDL_GetKeyboardState(nullptr);
+
+		float mx, my;
+		SDL_MouseButtonFlags buttons = SDL_GetMouseState(&mx, &my);
+
+		if (buttons & SDL_BUTTON_LMASK) {
+			cellSize += sizeChange;
+			auto d = resize(cellSize, font);
+			cellW = d.first; cellH = d.second;
+		}
+		if (buttons & SDL_BUTTON_RMASK) {
+			if (cellSize - sizeChange > 8) {
+				cellSize -= sizeChange;
+				auto d = resize(cellSize, font);
+				cellW = d.first; cellH = d.second;
+			}
 		}
 
+		if (keys[SDL_SCANCODE_D]) worldX += movingSpeed;
+		else if (keys[SDL_SCANCODE_A] && worldX >= movingSpeed) worldX -= movingSpeed;
+		if (keys[SDL_SCANCODE_S]) worldY += movingSpeed;
+		else if (keys[SDL_SCANCODE_W] && worldY >= movingSpeed) worldY -= movingSpeed;
 
-		BeginDrawing();
-		ClearBackground(BLACK);
-
-		int pixelOffsetX = worldX % (chunkW * cellSize);
-		int pixelOffsetY = worldY % (chunkH * cellSize);
+		SDL_SetRenderTarget(renderer, nullptr);
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_RenderClear(renderer);
 
 		int minChunkX = worldX / (chunkW * cellSize);
-		int maxChunkX = minChunkX + (width / (chunkW * cellSize)) + 2;
+		int maxChunkX = minChunkX + (width  / (chunkW * cellSize)) + 2;
 		int minChunkY = worldY / (chunkH * cellSize);
 		int maxChunkY = minChunkY + (height / (chunkH * cellSize)) + 2;
 
@@ -96,41 +128,43 @@ int main() {
 
 				Chunk& chunk = world[key];
 
-				if (std::size(chunk.cells) > 0){
-					chunk.tex = editTex(chunk, font, bakeSize);
-				}
+				if (!chunk.cells.empty())
+					editTex(renderer, chunk, font, bakeSize);
 
-				int destX = cx * chunkW * cellSize - worldX;
-				int destY = cy * chunkH * cellSize - worldY;
-				int destW = chunkW * cellSize;
-				int destH = chunkH * cellSize;
+				float destX = (float)(cx * chunkW * cellSize - worldX);
+				float destY = (float)(cy * chunkH * cellSize - worldY);
+				float destW = (float)(chunkW * cellSize);
+				float destH = (float)(chunkH * cellSize);
 
-				Rectangle src = {
-					0.0f, 0.0f,
-					(float)chunk.tex.texture.width,
-					-(float)chunk.tex.texture.height
-				};
-				Rectangle dst = {
-					(float)destX, (float)destY,
-					(float)destW, (float)destH
-				};
-
-				DrawTexturePro(chunk.tex.texture, src, dst, {0, 0}, 0.0f, WHITE);
+				SDL_FRect dst = {destX, destY, destW, destH};
+				SDL_RenderTexture(renderer, chunk.tex, nullptr, &dst);
 			}
 		}
-		DrawFPS(1, 1);
 
-		EndDrawing();
+		frameCount++;
+		Uint64 now = SDL_GetTicks();
+		if (now - fpsTimer >= 500) {
+			fps = (float)frameCount * 1000.0f / (float)(now - fpsTimer);
+			frameCount = 0;
+			fpsTimer = now;
+		}
+		drawFPS(renderer, font, fps, 1, 1);
+
+		SDL_RenderPresent(renderer);
 	}
 
-	UnloadShader(sdfShader);
-	UnloadFont(font);
-	for (auto& [key, chunk] : world){
-		UnloadRenderTexture(chunk.tex);
-	}
-	CloseWindow();  // last
+	for (auto& [key, chunk] : world)
+		if (chunk.tex) SDL_DestroyTexture(chunk.tex);
 
-	std::cout << "unloaded" << std::endl;
+	for (auto& [cp, tex] : font.glyphCache)
+		SDL_DestroyTexture(tex);
 
+	TTF_CloseFont(font.ttf);
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+	TTF_Quit();
+	SDL_Quit();
+
+	std::cout << "unloaded\n";
 	return 0;
 }
