@@ -6,6 +6,7 @@
 #include "types.hpp"
 #include "helper.hpp"
 #include "levelGeneration.hpp"
+#include "mover.hpp"
 
 using namespace Colors;
 
@@ -78,8 +79,7 @@ int main() {
 	bool running = true;
 	SDL_Event event;
 
-	int test=0;
-	int time=0;
+	Mover testMover(0, 0);
 
 	while (running) {
 		while (SDL_PollEvent(&event)) {
@@ -119,23 +119,9 @@ int main() {
 
 		SDL_SetRenderTarget(renderer, nullptr);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		SDL_RenderClear(renderer);
+		SDL_RenderClear(renderer);	
 
-		if (test<32){
-			if (time>=6000){
-				test++;
-				time=0;
-				EditCell cell;
-				cell.x=test;
-				cell.y=test;
-				cell.c = Colors::LIME;
-				cell.ch='!';
-
-				world[0].cells.push_back(cell);
-			}else{
-				time++;	
-			}
-		}
+		testMover.update(world);
 
 		int minChunkX = worldX / (chunkW * cellSize);
 		int maxChunkX = minChunkX + (width  / (chunkW * cellSize)) + 2;
@@ -151,6 +137,7 @@ int main() {
 
 				if (!chunk.cells.empty()){
 					editTex(renderer, chunk, font, bakeSize);
+					chunk.cells.clear();
 				}
 
 				float destX = (float)(cx * chunkW * cellSize - worldX);

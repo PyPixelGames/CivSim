@@ -130,7 +130,6 @@ void editTex(SDL_Renderer* renderer, Chunk& chunk,
 		chunk.colors[idx]     = cell.c;
 	}
 
-	chunk.cells.clear();
 	SDL_SetRenderTarget(renderer, nullptr);
 }
 
