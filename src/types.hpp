@@ -8,8 +8,8 @@ constexpr int chunkH = 32;
 struct EditCell{
 	int x;
 	int y;
-	char ch;
-	Color c;
+	char ch='?';
+	Color c=PURPLE;
 };
 
 struct Chunk {

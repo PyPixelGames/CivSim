@@ -64,10 +64,29 @@ RenderTexture2D chunkTex(Chunk& chunk, Font font, int bakeSize){
 		int x = i % chunkW;
 		int y = i / chunkW;
 		DrawTextCodepoint(font, chunk.codepoints[i],
-				{(float)x * bakeSize, (float)y * bakeSize},
-				bakeSize,
-				chunk.colors[i]);
+			{(float)x * bakeSize, (float)y * bakeSize},
+			bakeSize,
+		chunk.colors[i]);
 	}
 	EndTextureMode();
 	return tex;
+}
+
+RenderTexture2D editTex(Chunk& chunk, Font font, int bakeSize){
+	BeginTextureMode(chunk.tex);
+
+	for (auto cell : chunk.cells){
+		DrawRectangle(cell.x*bakeSize, cell.y*bakeSize, bakeSize, bakeSize, BLACK);	
+		DrawTextCodepoint(font, cell.ch,
+			{(float)cell.x * bakeSize, (float)cell.y * bakeSize},bakeSize, cell.c);
+		int	idx=cell.y*chunkW+cell.x;
+		chunk.codepoints[idx] = cell.ch;
+		chunk.colors[idx] = cell.c;
+	}
+
+	chunk.cells.clear();
+
+	EndTextureMode();
+
+	return chunk.tex;
 }

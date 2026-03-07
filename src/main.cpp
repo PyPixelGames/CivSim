@@ -36,16 +36,21 @@ int main() {
 	cellW = dims.first;
 	cellH = dims.second;
 
-	int generateSize = 32;
-	populateChunks(world, 30, 30, font, 32);
+	int bakeSize = 64;
+	populateChunks(world, 30, 30, font, bakeSize);
 
 	std::cout<<"population complete"<<std::endl;
 
-	generateLevel(world, 0, 0, font, 32);
+	generateLevel(world, 0, 0, font, bakeSize);
 	std::cout << "generation complete" << std::endl;
 
 	int sizeChange=1;
 	int movingSpeed=5;
+
+	EditCell c;
+	c.x = 5;
+	c.y = 5;
+	world[0].cells.push_back(c);
 
 	while (!WindowShouldClose()) {
 		if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
@@ -90,6 +95,10 @@ int main() {
 				if (world.find(key) == world.end()) continue;
 
 				Chunk& chunk = world[key];
+
+				if (std::size(chunk.cells) > 0){
+					chunk.tex = editTex(chunk, font, bakeSize);
+				}
 
 				int destX = cx * chunkW * cellSize - worldX;
 				int destY = cy * chunkH * cellSize - worldY;

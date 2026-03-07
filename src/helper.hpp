@@ -18,3 +18,5 @@ void populateChunks(std::unordered_map<int64_t,Chunk>& world,int chunksX,int chu
 std::vector<std::string> split(const std::string& s, char delim);
 
 RenderTexture2D chunkTex(Chunk& chunk, Font font, int bakeSize);
+
+RenderTexture2D editTex(Chunk& chunk, Font font, int bakeSize);
