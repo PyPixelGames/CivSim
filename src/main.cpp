@@ -50,17 +50,13 @@ int main() {
 		return 1;
 	}
 
-	short int cellSize = 32;
+	float cellSize = 32;
 	int worldX = 0;
 	int worldY = 0;
-	int sizeChange = 1;
-	int movingSpeed = 5;
+	int sizeChange = 50;
+	int movingSpeed = 300;
 
 	std::unordered_map<int64_t, Chunk> world;
-
-	auto dims = resize(cellSize, font);
-	int cellW = dims.first;
-	int cellH = dims.second;
 
 	populateChunks(world, 10, 10, font, bakeSize);
 	std::cout << "population complete\n";
@@ -81,7 +77,24 @@ int main() {
 
 	Mover testMover(0, 0);
 
+	Uint64 lastTime = SDL_GetTicks();
+	float deltaTime;
+	float updateAccumulator = 0.0f;
+	const float updateInterval = 0.5f;
+
 	while (running) {
+		frameCount++;
+		Uint64 now = SDL_GetTicks();
+		if (now - fpsTimer >= 500) {
+			fps = (float)frameCount * 1000.0f / (float)(now - fpsTimer);
+			frameCount = 0;
+			fpsTimer = now;
+		}
+		deltaTime = (now - lastTime) / 1000.0f;
+		lastTime = now;
+		// clamp to avoid spiral of death on lag spikes
+		if (deltaTime > 0.05f) deltaTime = 0.05f;
+
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_EVENT_QUIT) {
 				running = false;
@@ -100,28 +113,29 @@ int main() {
 		SDL_MouseButtonFlags buttons = SDL_GetMouseState(&mx, &my);
 
 		if (buttons & SDL_BUTTON_LMASK) {
-			cellSize += sizeChange;
-			auto d = resize(cellSize, font);
-			cellW = d.first; cellH = d.second;
+			cellSize += sizeChange*deltaTime;
 		}
 		if (buttons & SDL_BUTTON_RMASK) {
-			if (cellSize - sizeChange > 8) {
-				cellSize -= sizeChange;
-				auto d = resize(cellSize, font);
-				cellW = d.first; cellH = d.second;
+			if (cellSize - (sizeChange*deltaTime) > 8) {
+				cellSize -= sizeChange*deltaTime;
 			}
 		}
 
-		if (keys[SDL_SCANCODE_D]) worldX += movingSpeed;
-		else if (keys[SDL_SCANCODE_A] && worldX >= movingSpeed) worldX -= movingSpeed;
-		if (keys[SDL_SCANCODE_S]) worldY += movingSpeed;
-		else if (keys[SDL_SCANCODE_W] && worldY >= movingSpeed) worldY -= movingSpeed;
+		if (keys[SDL_SCANCODE_D]) worldX += (int)(movingSpeed * deltaTime);
+		if (keys[SDL_SCANCODE_A] && worldX > 0) worldX -= (int)(movingSpeed * deltaTime);
+
+		if (keys[SDL_SCANCODE_S]) worldY += (int)(movingSpeed * deltaTime);
+		if (keys[SDL_SCANCODE_W] && worldY > 0) worldY -= (int)(movingSpeed * deltaTime);
 
 		SDL_SetRenderTarget(renderer, nullptr);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderClear(renderer);	
 
-		testMover.update(world);
+		updateAccumulator += deltaTime;
+		if (updateAccumulator >= updateInterval) {
+			testMover.update(world);
+			updateAccumulator -= updateInterval;
+		}
 
 		int minChunkX = worldX / (chunkW * cellSize);
 		int maxChunkX = minChunkX + (width  / (chunkW * cellSize)) + 2;
@@ -148,18 +162,10 @@ int main() {
 				SDL_FRect dst = {destX, destY, destW, destH};
 				SDL_RenderTexture(renderer, chunk.tex, nullptr, &dst);
 			}
-		}
-
-		frameCount++;
-		Uint64 now = SDL_GetTicks();
-		if (now - fpsTimer >= 500) {
-			fps = (float)frameCount * 1000.0f / (float)(now - fpsTimer);
-			frameCount = 0;
-			fpsTimer = now;
-		}
+		}	
 		drawFPS(renderer, font, fps, 1, 1);
 
-		SDL_RenderPresent(renderer);
+		SDL_RenderPresent(renderer);	
 	}
 
 	for (auto& [key, chunk] : world)

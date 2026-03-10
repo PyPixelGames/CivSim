@@ -9,13 +9,9 @@ int64_t getKey(int cx, int cy);
 
 Chunk makeChunk(GameFont& font, int s);
 
-std::pair<int, int> resize(int cellSize, GameFont& font);
-
 void populateChunks(std::unordered_map<int64_t, Chunk>& world,
 		int chunksX, int chunksY,
 		GameFont& font, int s);
-
-std::vector<std::string> split(const std::string& s, char delim);
 
 void drawGlyph(SDL_Renderer* renderer, GameFont& font,
 		int codepoint, float x, float y, int cellSize,

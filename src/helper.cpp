@@ -15,19 +15,6 @@ Chunk makeChunk(GameFont& /*font*/, int /*s*/) {
 	return c;
 }
 
-std::pair<int, int> resize(int cellSize, GameFont& font) {
-	int minx, maxx, miny, maxy, advance;
-	if (!TTF_GetGlyphMetrics(font.ttf, 'A',
-				&minx, &maxx, &miny, &maxy, &advance)) {
-		return {cellSize, cellSize};
-	}
-	float scale = (float)cellSize / (float)font.baseSize;
-	int gap    = 4;
-	int cellW  = (int)((advance - minx) * scale) - gap;
-	int cellH  = (int)(font.baseSize       * scale) - gap;
-	return {cellW, cellH};
-}
-
 void populateChunks(std::unordered_map<int64_t, Chunk>& world,int chunksX, int chunksY,GameFont& font,
 		int s) {
 	for (int cy = 0; cy < chunksY; cy++)
@@ -36,15 +23,6 @@ void populateChunks(std::unordered_map<int64_t, Chunk>& world,int chunksX, int c
 			if (world.find(key) == world.end())
 				world[key] = makeChunk(font, s);
 		}
-}
-
-std::vector<std::string> split(const std::string& s, char delim) {
-	std::vector<std::string> parts;
-	std::stringstream ss(s);
-	std::string item;
-	while (std::getline(ss, item, delim))
-		parts.push_back(item);
-	return parts;
 }
 
 void drawGlyph(SDL_Renderer* renderer, GameFont& font,int codepoint, float x, float y, int cellSize,
