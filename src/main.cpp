@@ -62,7 +62,7 @@ int main() {
 	int cellW = dims.first;
 	int cellH = dims.second;
 
-	populateChunks(world, 30, 30, font, bakeSize);
+	populateChunks(world, 10, 10, font, bakeSize);
 	std::cout << "population complete\n";
 
 	generateLevel(world, 0, 0, renderer, font, bakeSize);

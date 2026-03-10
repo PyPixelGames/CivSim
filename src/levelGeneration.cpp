@@ -45,12 +45,14 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,
 			else                     { shade = '~'; color = DARKBLUE;  }
 
 			Chunk& chunk  = world[key];
-			int    localX = tx % chunkW;
-			int    localY = ty % chunkH;
-			int    index  = localY * chunkW + localX;
+			int localX = tx % chunkW;
+			int localY = ty % chunkH;
+			int index  = localY * chunkW + localX;
 
 			chunk.codepoints[index] = shade;
-			chunk.colors[index]     = color;
+			chunk.ogCodepoints[index]=shade;
+			chunk.colors[index] = color;
+			chunk.ogColors[index] = color;
 			dirtyKeys.insert(key);
 		}
 	}
