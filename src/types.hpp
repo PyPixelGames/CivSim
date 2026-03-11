@@ -6,7 +6,9 @@
 
 constexpr int chunkW = 32;
 constexpr int chunkH = 32;
-constexpr int gapSize=3; //increase this to make the gaps smaller
+constexpr int gapSize=6; //increase this to make the gaps smaller
+constexpr int bakeSize=32;
+constexpr float stride = bakeSize-gapSize;
 
 
 namespace Colors {

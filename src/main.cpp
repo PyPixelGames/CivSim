@@ -39,7 +39,6 @@ int main() {
 	int width = 0, height = 0;
 	SDL_GetRenderOutputSize(renderer, &width, &height);
 
-	const int bakeSize = 64;
 	GameFont font;
 	font.baseSize = bakeSize;
 	font.ttf = TTF_OpenFont("../src/fonts/AsciiFont.ttf", bakeSize);
@@ -58,7 +57,7 @@ int main() {
 
 	std::unordered_map<int64_t, Chunk> world;
 
-	populateChunks(world, 10, 10, font, bakeSize);
+	populateChunks(world, 100, 100, font, bakeSize);
 	std::cout << "population complete\n";
 
 	generateLevel(world, 0, 0, renderer, font, bakeSize);
@@ -112,7 +111,7 @@ int main() {
 			cellSize += sizeChange*deltaTime;
 		}
 		if (buttons & SDL_BUTTON_RMASK) {
-			if (cellSize - (sizeChange*deltaTime) > 8) {
+			if (cellSize - (sizeChange*deltaTime) > 15) {
 				cellSize -= sizeChange*deltaTime;
 			}
 		}
@@ -133,10 +132,10 @@ int main() {
 			updateAccumulator -= updateInterval;
 		}
 
-		int minChunkX = worldX / (chunkW * cellSize);
-		int maxChunkX = minChunkX + (width  / (chunkW * cellSize)) + 2;
-		int minChunkY = worldY / (chunkH * cellSize);
-		int maxChunkY = minChunkY + (height / (chunkH * cellSize)) + 2;
+		int minChunkX = worldX / (chunkW * (cellSize-gapSize));
+		int maxChunkX = minChunkX + (width  / (chunkW * (cellSize-gapSize))) + 2;
+		int minChunkY = worldY / (chunkH * (cellSize-gapSize));
+		int maxChunkY = minChunkY + (height / (chunkH * (cellSize-gapSize))) + 2;
 
 		for (int cy = minChunkY; cy <= maxChunkY; cy++) {
 			for (int cx = minChunkX; cx <= maxChunkX; cx++) {
@@ -150,10 +149,11 @@ int main() {
 					chunk.cells.clear();
 				}
 
-				float destX = (float)(cx * chunkW * cellSize - worldX);
-				float destY = (float)(cy * chunkH * cellSize - worldY);
-				float destW = (float)(chunkW * cellSize);
-				float destH = (float)(chunkH * cellSize);
+				float destW = (float)(chunkW * (cellSize - gapSize));
+				float destH = (float)(chunkH * (cellSize - gapSize));
+
+				float destX = (float)(cx * chunkW * (cellSize - gapSize) - worldX);
+				float destY = (float)(cy * chunkH * (cellSize - gapSize) - worldY);
 
 				SDL_FRect dst = {destX, destY, destW, destH};
 				SDL_RenderTexture(renderer, chunk.tex, nullptr, &dst);

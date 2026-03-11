@@ -9,7 +9,9 @@ Chunk makeChunk(GameFont& /*font*/, int /*s*/) {
 	Chunk c;
 	for (int i = 0; i < chunkW * chunkH; i++) {
 		c.codepoints[i] = '`';
-		c.colors[i]     = {52, 52, 52, 255};
+		c.ogCodepoints[i] = '`';
+		c.colors[i] = {52, 52, 52, 255};
+		c.ogColors[i] = {52, 52, 52, 255};
 	}
 	c.tex = nullptr;
 	return c;
@@ -54,8 +56,8 @@ void drawGlyph(SDL_Renderer* renderer, GameFont& font,int codepoint, float x, fl
 
 SDL_Texture* chunkTex(SDL_Renderer* renderer, Chunk& chunk,GameFont& font, int bakeSize) {
 	SDL_Texture* tex = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_TARGET,
-			bakeSize * chunkW-(gapSize*chunkW),
-			bakeSize * chunkH-(gapSize*chunkH));
+			stride * chunkW,
+			stride * chunkH);
 	if (!tex) return nullptr;
 	SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
 
@@ -66,8 +68,8 @@ SDL_Texture* chunkTex(SDL_Renderer* renderer, Chunk& chunk,GameFont& font, int b
 	for (int i = 0; i < chunkW * chunkH; i++) {
 		int cx = i % chunkW;
 		int cy = i / chunkW;
-		drawGlyph(renderer, font, chunk.codepoints[i],(float)(cx * bakeSize),(float)(cy * bakeSize),
-				bakeSize,chunk.colors[i]);
+		drawGlyph(renderer, font, chunk.codepoints[i],(float)(cx * stride),
+				(float)(cy * stride),bakeSize,chunk.colors[i]);
 	}
 
 	SDL_SetRenderTarget(renderer, nullptr);
@@ -83,19 +85,15 @@ void editTex(SDL_Renderer* renderer, Chunk& chunk,
 	for (auto& cell : chunk.cells) {
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_FRect rect = {
-			(float)(cell.x * bakeSize),
-			(float)(cell.y * bakeSize),
-			(float)bakeSize,
-			(float)bakeSize
+			(float)(cell.x * stride),
+			(float)(cell.y * stride),
+			(float)stride,
+			(float)stride
 		};
 		SDL_RenderFillRect(renderer, &rect);
 
-		drawGlyph(renderer, font,
-				cell.ch,
-				(float)(cell.x * bakeSize),
-				(float)(cell.y * bakeSize),
-				bakeSize,
-				cell.c);
+		drawGlyph(renderer, font, cell.ch,(float)(cell.x * stride),
+				(float)(cell.y * stride),bakeSize,cell.c);
 
 		int idx = cell.y * chunkW + cell.x;
 		chunk.codepoints[idx] = cell.ch;

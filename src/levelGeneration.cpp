@@ -8,8 +8,8 @@
 using namespace Colors;   // WHITE, GRAY, DARKGREEN, etc.
 
 static FastNoiseLite noise;
-static int levelSizeX = 320;
-static int levelSizeY = 320;
+static int levelSizeX = 640;
+static int levelSizeY = 640;
 static std::mt19937 rng(std::random_device{}());
 
 void generateLevel(std::unordered_map<int64_t, Chunk>& world,
