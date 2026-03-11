@@ -53,11 +53,9 @@ void drawGlyph(SDL_Renderer* renderer, GameFont& font,int codepoint, float x, fl
 }
 
 SDL_Texture* chunkTex(SDL_Renderer* renderer, Chunk& chunk,GameFont& font, int bakeSize) {
-	SDL_Texture* tex = SDL_CreateTexture(renderer,
-			SDL_PIXELFORMAT_RGBA8888,
-			SDL_TEXTUREACCESS_TARGET,
-			bakeSize * chunkW,
-			bakeSize * chunkH);
+	SDL_Texture* tex = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_TARGET,
+			bakeSize * chunkW-(gapSize*chunkW),
+			bakeSize * chunkH-(gapSize*chunkH));
 	if (!tex) return nullptr;
 	SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
 
@@ -68,12 +66,8 @@ SDL_Texture* chunkTex(SDL_Renderer* renderer, Chunk& chunk,GameFont& font, int b
 	for (int i = 0; i < chunkW * chunkH; i++) {
 		int cx = i % chunkW;
 		int cy = i / chunkW;
-		drawGlyph(renderer, font,
-				chunk.codepoints[i],
-				(float)(cx * bakeSize),
-				(float)(cy * bakeSize),
-				bakeSize,
-				chunk.colors[i]);
+		drawGlyph(renderer, font, chunk.codepoints[i],(float)(cx * bakeSize),(float)(cy * bakeSize),
+				bakeSize,chunk.colors[i]);
 	}
 
 	SDL_SetRenderTarget(renderer, nullptr);

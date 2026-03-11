@@ -6,6 +6,8 @@
 
 constexpr int chunkW = 32;
 constexpr int chunkH = 32;
+constexpr int gapSize=3; //increase this to make the gaps smaller
+
 
 namespace Colors {
 	static constexpr SDL_Color WHITE = {240, 233, 201, 255};
