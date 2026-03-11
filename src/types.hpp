@@ -8,14 +8,14 @@ constexpr int chunkW = 32;
 constexpr int chunkH = 32;
 
 namespace Colors {
-	static constexpr SDL_Color WHITE     = {255, 255, 255, 255};
-	static constexpr SDL_Color BLACK     = {  0,   0,   0, 255};
-	static constexpr SDL_Color GRAY      = {130, 130, 130, 255};
-	static constexpr SDL_Color DARKGREEN = {  0, 117,  44, 255};
-	static constexpr SDL_Color LIME      = {  0, 158,  47, 255};
-	static constexpr SDL_Color BEIGE     = {211, 176, 131, 255};
-	static constexpr SDL_Color DARKBLUE  = {  0,  82, 172, 255};
-	static constexpr SDL_Color PURPLE    = {200, 122, 255, 255};
+	static constexpr SDL_Color WHITE = {240, 233, 201, 255};
+	static constexpr SDL_Color BLACK = {53, 43, 64, 255};
+	static constexpr SDL_Color GRAY = {125, 110, 110, 255};
+	static constexpr SDL_Color DARKGREEN = {80, 141, 118, 255};
+	static constexpr SDL_Color LIME = {118, 195, 121, 255};
+	static constexpr SDL_Color YELLOW = {218, 203, 128, 255};
+	static constexpr SDL_Color DARKBLUE = {83, 92, 137, 255};
+	static constexpr SDL_Color PURPLE = {190, 121, 121, 255};
 }
 
 struct GameFont {
@@ -39,3 +39,5 @@ struct Chunk {
 	SDL_Texture* tex = nullptr;
 	std::vector<EditCell> cells;
 };
+
+struct ChunkCoord { int cx, cy, lx, ly; };

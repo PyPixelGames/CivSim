@@ -64,10 +64,6 @@ int main() {
 	generateLevel(world, 0, 0, renderer, font, bakeSize);
 	std::cout << "generation complete\n";
 
-	EditCell ec;
-	ec.x = 5; ec.y = 5;
-	world[0].cells.push_back(ec);
-
 	Uint64 fpsTimer = SDL_GetTicks();
 	int frameCount = 0;
 	float fps = 0.0f;

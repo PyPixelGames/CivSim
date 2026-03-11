@@ -112,23 +112,27 @@ void editTex(SDL_Renderer* renderer, Chunk& chunk,
 }
 
 void drawFPS(SDL_Renderer* renderer, GameFont& font,
-             float fps, int x, int y) {
-    std::string text = "FPS: " + std::to_string((int)fps);
-    SDL_Color color  = {0, 255, 40, 255};
+		float fps, int x, int y) {
+	std::string text = "FPS: " + std::to_string((int)fps);
+	SDL_Color color  = {0, 255, 40, 255};
 
-    SDL_Surface* surf = TTF_RenderText_Blended(font.ttf,
-                                               text.c_str(), 0,
-                                               color);
-    if (!surf) return;
+	SDL_Surface* surf = TTF_RenderText_Blended(font.ttf,
+			text.c_str(), 0,
+			color);
+	if (!surf) return;
 
-    SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
-    SDL_DestroySurface(surf);
-    if (!tex) return;
+	SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
+	SDL_DestroySurface(surf);
+	if (!tex) return;
 
-    float w = 0, h = 0;
-    SDL_GetTextureSize(tex, &w, &h);
-    const float scale = 0.4f;
-    SDL_FRect dst = {(float)x, (float)y, w * scale, h * scale};
-    SDL_RenderTexture(renderer, tex, nullptr, &dst);
-    SDL_DestroyTexture(tex);
+	float w = 0, h = 0;
+	SDL_GetTextureSize(tex, &w, &h);
+	const float scale = 0.4f;
+	SDL_FRect dst = {(float)x, (float)y, w * scale, h * scale};
+	SDL_RenderTexture(renderer, tex, nullptr, &dst);
+	SDL_DestroyTexture(tex);
+}
+
+ChunkCoord toChunk(int x, int y){
+	return { x/chunkW, y/chunkH, x%chunkW, y%chunkH };
 }

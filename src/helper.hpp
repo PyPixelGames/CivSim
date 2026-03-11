@@ -25,3 +25,5 @@ void editTex(SDL_Renderer* renderer, Chunk& chunk,
 
 void drawFPS(SDL_Renderer* renderer, GameFont& font,
 		float fps, int x, int y);
+
+ChunkCoord toChunk(int x, int y);
