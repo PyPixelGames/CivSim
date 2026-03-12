@@ -37,7 +37,15 @@ int main() {
 	SDL_SetRenderVSync(renderer, 1);
 
 	int width = 0, height = 0;
-	SDL_GetRenderOutputSize(renderer, &width, &height);
+	SDL_GetRenderOutputSize(renderer, &width, &height);	
+
+	float cellSize = 32;
+	int worldX = 0;
+	int worldY = 0;
+	int sizeChange = 50;
+	int movingSpeed = 300;
+
+	std::unordered_map<int64_t, Chunk> world;
 
 	GameFont font;
 	font.baseSize = bakeSize;
@@ -49,18 +57,10 @@ int main() {
 		return 1;
 	}
 
-	float cellSize = 32;
-	int worldX = 0;
-	int worldY = 0;
-	int sizeChange = 50;
-	int movingSpeed = 300;
-
-	std::unordered_map<int64_t, Chunk> world;
-
-	populateChunks(world, 100, 100, font, bakeSize);
+	populateChunks(world, 100, 100, bakeSize);
 	std::cout << "population complete\n";
 
-	generateLevel(world, 0, 0, renderer, font, bakeSize);
+	generateLevel(world, renderer, bakeSize);
 	std::cout << "generation complete\n";
 
 	Uint64 fpsTimer = SDL_GetTicks();
@@ -111,7 +111,7 @@ int main() {
 			cellSize += sizeChange*deltaTime;
 		}
 		if (buttons & SDL_BUTTON_RMASK) {
-			if (cellSize - (sizeChange*deltaTime) > 15) {
+			if (cellSize - (sizeChange*deltaTime) > 8) {
 				cellSize -= sizeChange*deltaTime;
 			}
 		}
@@ -145,7 +145,7 @@ int main() {
 				Chunk& chunk = world[key];
 
 				if (!chunk.cells.empty()){
-					editTex(renderer, chunk, font, bakeSize);
+					editTex(renderer, chunk, bakeSize);
 					chunk.cells.clear();
 				}
 

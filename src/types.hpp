@@ -6,20 +6,22 @@
 
 constexpr int chunkW = 32;
 constexpr int chunkH = 32;
-constexpr int gapSize=6; //increase this to make the gaps smaller
-constexpr int bakeSize=32;
+constexpr int gapSize=0; //increase this to make the gaps smaller
+constexpr int bakeSize=64;
 constexpr float stride = bakeSize-gapSize;
 
+constexpr SDL_Color bg = {25, 25, 25, 255};
 
 namespace Colors {
-	static constexpr SDL_Color WHITE = {240, 233, 201, 255};
-	static constexpr SDL_Color BLACK = {53, 43, 64, 255};
-	static constexpr SDL_Color GRAY = {125, 110, 110, 255};
-	static constexpr SDL_Color DARKGREEN = {80, 141, 118, 255};
-	static constexpr SDL_Color LIME = {118, 195, 121, 255};
-	static constexpr SDL_Color YELLOW = {218, 203, 128, 255};
-	static constexpr SDL_Color DARKBLUE = {83, 92, 137, 255};
-	static constexpr SDL_Color PURPLE = {190, 121, 121, 255};
+	static constexpr SDL_Color WHITE = {255, 241, 232, 255};
+	static constexpr SDL_Color BLACK = {0, 0, 0, 255};
+	static constexpr SDL_Color LIGHTGRAY = {194, 195, 199, 255};
+	static constexpr SDL_Color DARKGRAY = {95, 87, 79, 255};
+	static constexpr SDL_Color DARKGREEN = {0, 135, 81, 255};
+	static constexpr SDL_Color LIME = {0, 228, 54, 255};
+	static constexpr SDL_Color YELLOW = {255, 236, 39, 255};
+	static constexpr SDL_Color DARKBLUE = {29, 43, 83, 255};
+	static constexpr SDL_Color PURPLE = {126, 37, 83, 255};
 }
 
 struct GameFont {
