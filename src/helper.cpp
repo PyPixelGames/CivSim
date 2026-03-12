@@ -8,8 +8,6 @@ int64_t getKey(int cx, int cy) {
 Chunk makeChunk(int /*s*/) {
 	Chunk c;
 	for (int i = 0; i < chunkW * chunkH; i++) {
-		c.codepoints[i] = '`';
-		c.ogCodepoints[i] = '`';
 		c.colors[i] = {52, 52, 52, 255};
 		c.ogColors[i] = {52, 52, 52, 255};
 	}
@@ -68,7 +66,6 @@ void editTex(SDL_Renderer* renderer, Chunk& chunk,int bakeSize) {
 		SDL_RenderFillRect(renderer, &rect);	
 
 		int idx = cell.y * chunkW + cell.x;
-		chunk.codepoints[idx] = cell.ch;
 		chunk.colors[idx]     = cell.c;
 	}
 
@@ -79,11 +76,9 @@ void editTex(SDL_Renderer* renderer, Chunk& chunk,int bakeSize) {
 void drawFPS(SDL_Renderer* renderer, GameFont& font,
 		float fps, int x, int y) {
 	std::string text = "FPS: " + std::to_string((int)fps);
-	SDL_Color color  = {0, 255, 40, 255};
+	SDL_Color color  = Colors::BLACK;
 
-	SDL_Surface* surf = TTF_RenderText_Blended(font.ttf,
-			text.c_str(), 0,
-			color);
+	SDL_Surface* surf = TTF_RenderText_Blended(font.ttf,text.c_str(), 0,color);
 	if (!surf) return;
 
 	SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
@@ -100,4 +95,8 @@ void drawFPS(SDL_Renderer* renderer, GameFont& font,
 
 ChunkCoord toChunk(int x, int y){
 	return { x/chunkW, y/chunkH, x%chunkW, y%chunkH };
+}
+
+bool compareColors(SDL_Color c1, SDL_Color c2){
+	return (c1.a==c2.a && c1.r==c2.r && c1.g==c2.g && c1.b==c2.b);
 }

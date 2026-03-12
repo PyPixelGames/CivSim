@@ -44,19 +44,17 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 			float value = noise.GetNoise((float)(tx + varX), (float)(ty + varY));
 			value = (value + 1.0f) / 2.0f;
 
-			char      shade;
-			SDL_Color color;
+			SDL_Color color = BLACK;
 
-			if      (value >= 0.85f) {shade = '^'; color = WHITE;}      // peaks
-			else if (value >= 0.78f) {shade = '+'; color = DARKGRAY;}   // mountains
-			else if (value >= 0.37f) {shade = '.'; color = LIME;}       // fields
-			else if (value >= 0.33f) {shade = '.'; color = YELLOW;}     // sand/beach (wider now)
-			else                     {shade = '~'; color = DARKBLUE;}   // water
+			if      (value >= 0.85f) {color = WHITE;}      // peaks
+			else if (value >= 0.78f) {color = DARKGRAY;}   // mountains
+			else if (value >= 0.37f) {color = LIME;}       // fields
+			else if (value >= 0.33f) {color = YELLOW;}     // sand/beach (wider now)
+			else                     {color = DARKBLUE;}   // water
 			
 			float vegValue = vegNoise.GetNoise((float)(tx+vegVarX), (float)(ty+vegVarY));
 			vegValue = (vegValue + 1.0f) / 2.0f;
-			if (vegValue >= 0.70f && shade == '.'){
-				shade='T';
+			if (vegValue >= 0.70f && color.r == LIME.r && color.g == LIME.g && color.b == LIME.b){
 				color=DARKGREEN;
 			}
 
@@ -65,8 +63,6 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 			int localY = ty % chunkH;
 			int index  = localY * chunkW + localX;
 
-			chunk.codepoints[index] = shade;
-			chunk.ogCodepoints[index]=shade;
 			chunk.colors[index] = color;
 			chunk.ogColors[index] = color;
 			dirtyKeys.insert(key);

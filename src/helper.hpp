@@ -24,3 +24,5 @@ void drawFPS(SDL_Renderer* renderer, GameFont& font,
 		float fps, int x, int y);
 
 ChunkCoord toChunk(int x, int y);
+
+bool compareColors(SDL_Color c1, SDL_Color c2);

@@ -14,9 +14,8 @@ class Mover{
 
 		void update(std::unordered_map<int64_t, Chunk>& world);
 
-		void changeCell(std::unordered_map<int64_t, Chunk>& world, int x, int y,
-				char c, SDL_Color color);
+		void changeCell(std::unordered_map<int64_t, Chunk>& world,int x,int y,SDL_Color color,
+				bool restore);
 
-		char checkCell(std::unordered_map<int64_t, Chunk>& world, int x, int y);
-	
+		SDL_Color checkCell(std::unordered_map<int64_t, Chunk>& world, int x, int y)	;
 };

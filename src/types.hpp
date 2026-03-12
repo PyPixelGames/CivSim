@@ -33,13 +33,10 @@ struct GameFont {
 struct EditCell {
 	int       x  = 0;
 	int       y  = 0;
-	char      ch = '?';
 	SDL_Color c  = Colors::PURPLE;
 };
 
 struct Chunk {
-	int codepoints[chunkW * chunkH];
-	int ogCodepoints[chunkW * chunkH];
 	SDL_Color colors [chunkW * chunkH];
 	SDL_Color ogColors [chunkW * chunkH];
 	SDL_Texture* tex = nullptr;
