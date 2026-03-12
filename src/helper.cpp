@@ -5,12 +5,8 @@ int64_t getKey(int cx, int cy) {
 	return (int64_t(cx) << 32) | int64_t(uint32_t(cy));
 }
 
-Chunk makeChunk(int /*s*/) {
+Chunk makeChunk(){
 	Chunk c;
-	for (int i = 0; i < chunkW * chunkH; i++) {
-		c.colors[i] = {52, 52, 52, 255};
-		c.ogColors[i] = {52, 52, 52, 255};
-	}
 	c.tex = nullptr;
 	return c;
 }
@@ -21,11 +17,11 @@ void populateChunks(std::unordered_map<int64_t, Chunk>& world,int chunksX, int c
 		for (int cx = 0; cx < chunksX; cx++) {
 			int64_t key = getKey(cx, cy);
 			if (world.find(key) == world.end())
-				world[key] = makeChunk(s);
+				world[key] = makeChunk();
 		}
 }
 
-SDL_Texture* chunkTex(SDL_Renderer* renderer, Chunk& chunk, int bakeSize) {
+SDL_Texture* chunkTex(SDL_Renderer* renderer, Chunk& chunk, int bakeSize, SDL_Texture* atlas) {
 	SDL_Texture* tex = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_TARGET,
 			stride * chunkW,
 			stride * chunkH);
@@ -39,11 +35,18 @@ SDL_Texture* chunkTex(SDL_Renderer* renderer, Chunk& chunk, int bakeSize) {
 	for (int i = 0; i < chunkW * chunkH; i++) {
 		int cx = i % chunkW;
 		int cy = i / chunkW;
-		SDL_SetRenderDrawColor(renderer, chunk.colors[i].r, chunk.colors[i].g, 
-				chunk.colors[i].b, chunk.colors[i].a);
-		SDL_FRect rect = {(float)(cx * bakeSize),(float)(cy * bakeSize),
-			(float)bakeSize+2,(float)bakeSize+2};
-		SDL_RenderFillRect(renderer, &rect);
+		SDL_FRect dst = {(float)(cx * bakeSize), (float)(cy * bakeSize), (float)bakeSize, (float)bakeSize};
+
+		if (chunk.c[i].bg == -1){
+			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+			SDL_RenderFillRect(renderer, &dst);
+		}else{
+			SDL_RenderTexture(renderer, atlas, &tiles[chunk.c[i].bg].uv, &dst); 
+		}
+
+		if (chunk.c[i].fg != -1){
+			SDL_RenderTexture(renderer, atlas, &tiles[chunk.c[i].fg].uv, &dst);	
+		}
 	}
 
 	SDL_SetRenderTarget(renderer, nullptr);
@@ -51,22 +54,27 @@ SDL_Texture* chunkTex(SDL_Renderer* renderer, Chunk& chunk, int bakeSize) {
 	return tex;
 }
 
-void editTex(SDL_Renderer* renderer, Chunk& chunk,int bakeSize) {
+void editTex(SDL_Renderer* renderer, Chunk& chunk,int bakeSize, SDL_Texture* atlas) {
 	if (!chunk.tex) return;
 
 	SDL_SetRenderTarget(renderer, chunk.tex);
 
 	for (auto& cell : chunk.cells) {
-		SDL_SetRenderDrawColor(renderer, cell.c.r, cell.c.g, cell.c.b, cell.c.a);
-		SDL_FRect rect = {
-			(float)(cell.x * bakeSize),
-			(float)(cell.y * bakeSize),
-			(float)bakeSize+2,
-			(float)bakeSize+2};
-		SDL_RenderFillRect(renderer, &rect);	
+		SDL_FRect dst = {(float)(cell.x*bakeSize), (float)(cell.y*bakeSize), (float)bakeSize, (float)bakeSize};
+
+		if (cell.c.bg == -1){
+			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+			SDL_RenderFillRect(renderer, &dst);
+		}else{
+			SDL_RenderTexture(renderer, atlas, &tiles[cell.c.bg].uv, &dst); 
+		}
+
+		if (cell.c.fg != -1){
+			SDL_RenderTexture(renderer, atlas, &tiles[cell.c.fg].uv, &dst);	
+		}	
 
 		int idx = cell.y * chunkW + cell.x;
-		chunk.colors[idx]     = cell.c;
+		chunk.c[idx] = cell.c;
 	}
 
 	SDL_SetRenderTarget(renderer, nullptr);
@@ -95,8 +103,4 @@ void drawFPS(SDL_Renderer* renderer, GameFont& font,
 
 ChunkCoord toChunk(int x, int y){
 	return { x/chunkW, y/chunkH, x%chunkW, y%chunkH };
-}
-
-bool compareColors(SDL_Color c1, SDL_Color c2){
-	return (c1.a==c2.a && c1.r==c2.r && c1.g==c2.g && c1.b==c2.b);
 }

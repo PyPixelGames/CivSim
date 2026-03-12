@@ -11,7 +11,7 @@ static int levelSizeX = 640;
 static int levelSizeY = 640;
 static std::mt19937 rng(std::random_device{}());
 
-void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* renderer,int s) {
+void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* renderer,int s, SDL_Texture* atlas) {
 	static std::uniform_real_distribution<float> dist(1.0f, 100000.0f);
 	float varX = dist(rng);
 	float varY = dist(rng);
@@ -44,18 +44,18 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 			float value = noise.GetNoise((float)(tx + varX), (float)(ty + varY));
 			value = (value + 1.0f) / 2.0f;
 
-			SDL_Color color = BLACK;
+			Cell type{-1, -1};	
 
-			if      (value >= 0.85f) {color = WHITE;}      // peaks
-			else if (value >= 0.78f) {color = DARKGRAY;}   // mountains
-			else if (value >= 0.37f) {color = LIME;}       // fields
-			else if (value >= 0.33f) {color = YELLOW;}     // sand/beach (wider now)
-			else                     {color = DARKBLUE;}   // water
+			if      (value >= 0.85f) {type.bg= 5;}
+			else if (value >= 0.78f) {type.bg= 4;}
+			else if (value >= 0.37f) {type.bg= 2;}
+			else if (value >= 0.33f) {type.bg= 1;}
+			else                     {type.bg= 0;}
 			
 			float vegValue = vegNoise.GetNoise((float)(tx+vegVarX), (float)(ty+vegVarY));
 			vegValue = (vegValue + 1.0f) / 2.0f;
-			if (vegValue >= 0.70f && color.r == LIME.r && color.g == LIME.g && color.b == LIME.b){
-				color=DARKGREEN;
+			if (vegValue >= 0.70f && type.bg==2){
+				type.fg=3;
 			}
 
 			Chunk& chunk  = world[key];
@@ -63,8 +63,8 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 			int localY = ty % chunkH;
 			int index  = localY * chunkW + localX;
 
-			chunk.colors[index] = color;
-			chunk.ogColors[index] = color;
+			chunk.c[index] = type;
+			chunk.ogC[index] = type;
 			dirtyKeys.insert(key);
 		}
 	}
@@ -73,6 +73,6 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 	for (int64_t key : dirtyKeys) {
 		Chunk& chunk = world[key];
 		if (chunk.tex) SDL_DestroyTexture(chunk.tex);
-		chunk.tex = chunkTex(renderer, chunk, s);
+		chunk.tex = chunkTex(renderer, chunk, s, atlas);
 	}
 }

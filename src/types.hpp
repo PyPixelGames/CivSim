@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#include <SDL3_image/SDL_image.h>
 #include <vector>
 #include <unordered_map>
 
@@ -24,6 +25,25 @@ namespace Colors {
 	static constexpr SDL_Color PURPLE = {126, 37, 83, 255};
 }
 
+typedef struct {
+	int name;
+	SDL_FRect uv;
+} NamedEntry;
+
+static constexpr NamedEntry tiles[] = {
+	{0, {0, 0, 64, 64}},
+	{1, {64, 0, 64, 64}},
+	{2, {128, 0, 64, 64}},
+	{3, {64*3, 0, 64, 64}},
+	{4, {64*4, 0, 64, 64}},
+	{5, {64*5, 0, 64, 64}},
+};
+
+struct Cell {
+	int fg= -1;
+	int bg= -1;
+};
+
 struct GameFont {
 	TTF_Font* ttf      = nullptr;
 	int       baseSize = 64;
@@ -31,14 +51,15 @@ struct GameFont {
 };
 
 struct EditCell {
-	int       x  = 0;
-	int       y  = 0;
-	SDL_Color c  = Colors::PURPLE;
+	int x = 0;
+	int y = 0;
+	Cell c;
 };
 
 struct Chunk {
-	SDL_Color colors [chunkW * chunkH];
-	SDL_Color ogColors [chunkW * chunkH];
+	Cell c [chunkW*chunkH];
+	Cell ogC [chunkW*chunkH];
+
 	SDL_Texture* tex = nullptr;
 	std::vector<EditCell> cells;
 };

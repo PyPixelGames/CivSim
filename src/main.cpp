@@ -1,5 +1,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#include <SDL3_image/SDL_image.h>
 #include <iostream>
 #include <vector>
 #include <string>
@@ -57,10 +58,16 @@ int main() {
 		return 1;
 	}
 
+	SDL_Texture *atlas = IMG_LoadTexture(renderer, "../src/images/atlas.png");	
+
+	if (!atlas) {
+		std::cerr << "Atlas load failed: " << SDL_GetError() << "\n";
+	}
+
 	populateChunks(world, 100, 100, bakeSize);
 	std::cout << "population complete\n";
 
-	generateLevel(world, renderer, bakeSize);
+	generateLevel(world, renderer, bakeSize, atlas);
 	std::cout << "generation complete\n";
 
 	Uint64 fpsTimer = SDL_GetTicks();
@@ -145,7 +152,7 @@ int main() {
 				Chunk& chunk = world[key];
 
 				if (!chunk.cells.empty()){
-					editTex(renderer, chunk, bakeSize);
+					editTex(renderer, chunk, bakeSize, atlas);
 					chunk.cells.clear();
 				}
 
