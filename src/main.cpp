@@ -114,13 +114,28 @@ int main() {
 		float mx, my;
 		SDL_MouseButtonFlags buttons = SDL_GetMouseState(&mx, &my);
 
+		auto zoomAround = [&](float newCellSize) {
+			if (newCellSize < 8.0f) return;
+			float scale = newCellSize / cellSize;
+			worldX = (int)((worldX + mx) * scale - mx);
+			worldY = (int)((worldY + my) * scale - my);
+	
+			if (worldX < 0){
+				worldX = 0;
+			}
+
+			if (worldY < 0){
+				worldY = 0;
+			}
+
+			cellSize = newCellSize;
+		};
+
 		if (buttons & SDL_BUTTON_LMASK) {
-			cellSize += sizeChange*deltaTime;
+			zoomAround(cellSize + sizeChange * deltaTime);
 		}
 		if (buttons & SDL_BUTTON_RMASK) {
-			if (cellSize - (sizeChange*deltaTime) > 8) {
-				cellSize -= sizeChange*deltaTime;
-			}
+			zoomAround(cellSize - sizeChange * deltaTime);
 		}
 
 		if (keys[SDL_SCANCODE_D]) worldX += (int)(movingSpeed * deltaTime);
