@@ -4,7 +4,7 @@
 
 void Mover::update(std::unordered_map<int64_t, Chunk>& world){
 	Cell p = checkCell(world, x+1, y);
-	if (p.bg != 0 && p.fg != 0){
+	if (p.bg.y != Terrain::Water){
 		changeCell(world, x, y, {-1, -1}, true);  // restore
 		x++;
 		changeCell(world, x, y, {-1, -1}, false); // place
@@ -28,6 +28,6 @@ void Mover::changeCell(std::unordered_map<int64_t, Chunk>& world,int x,int y,Cel
 Cell Mover::checkCell(std::unordered_map<int64_t, Chunk>& world, int x, int y){
 	ChunkCoord coords = toChunk(x, y);
 	auto it = world.find(getKey(coords.cx, coords.cy));
-	if (it == world.end()) return {-1, -1}; // sentinel
+	if (it == world.end()) return Cell{}; // sentinel
 	return it->second.c[coords.ly * chunkW + coords.lx];
 }

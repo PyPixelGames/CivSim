@@ -39,9 +39,27 @@ static constexpr NamedEntry tiles[] = {
 	{5, {64*5, 0, 64, 64}},
 };
 
+enum Terrain{
+    Water = 0,
+    Grass = 1,
+	Tree = 2,
+    Sand = 3,
+	Mountain = 4,
+	MountainTop = 5,
+
+	FIELDS=0,
+	SNOWY=1,
+};
+
+struct AtlasPos{
+	short int x=0;
+	short int y=0;
+	bool state=false;
+};
+
 struct Cell {
-	int fg= -1;
-	int bg= -1;
+	AtlasPos fg;
+	AtlasPos bg;
 };
 
 struct GameFont {

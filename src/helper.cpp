@@ -35,17 +35,22 @@ SDL_Texture* chunkTex(SDL_Renderer* renderer, Chunk& chunk, int bakeSize, SDL_Te
 	for (int i = 0; i < chunkW * chunkH; i++) {
 		int cx = i % chunkW;
 		int cy = i / chunkW;
-		SDL_FRect dst = {(float)(cx * bakeSize), (float)(cy * bakeSize), (float)bakeSize, (float)bakeSize};
+		SDL_FRect dst = {(float)(cx * bakeSize),(float)(cy * bakeSize),
+			(float)bakeSize,(float)bakeSize};
 
-		if (chunk.c[i].bg == -1){
+		if (!chunk.c[i].bg.state){
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 			SDL_RenderFillRect(renderer, &dst);
 		}else{
-			SDL_RenderTexture(renderer, atlas, &tiles[chunk.c[i].bg].uv, &dst); 
+			SDL_FRect src = {(float)(chunk.c[i].bg.x*bakeSize), (float)(chunk.c[i].bg.y*bakeSize),
+				(float)bakeSize,(float)bakeSize};
+			SDL_RenderTexture(renderer, atlas, &src, &dst); 
 		}
 
-		if (chunk.c[i].fg != -1){
-			SDL_RenderTexture(renderer, atlas, &tiles[chunk.c[i].fg].uv, &dst);	
+		if (chunk.c[i].fg.state){
+			SDL_FRect src = {(float)(chunk.c[i].fg.x*bakeSize), (float)(chunk.c[i].fg.y*bakeSize),
+				(float)bakeSize,(float)bakeSize};
+			SDL_RenderTexture(renderer, atlas, &src, &dst);	
 		}
 	}
 
@@ -62,16 +67,22 @@ void editTex(SDL_Renderer* renderer, Chunk& chunk,int bakeSize, SDL_Texture* atl
 	for (auto& cell : chunk.cells) {
 		SDL_FRect dst = {(float)(cell.x*bakeSize), (float)(cell.y*bakeSize), (float)bakeSize, (float)bakeSize};
 
-		if (cell.c.bg == -1){
+
+		if (!cell.c.bg.state){
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 			SDL_RenderFillRect(renderer, &dst);
 		}else{
-			SDL_RenderTexture(renderer, atlas, &tiles[cell.c.bg].uv, &dst); 
+			SDL_FRect src = {(float)(cell.c.bg.x*bakeSize), (float)(cell.c.bg.y*bakeSize),
+				(float)bakeSize,(float)bakeSize};
+			SDL_RenderTexture(renderer, atlas, &src, &dst); 
 		}
 
-		if (cell.c.fg != -1){
-			SDL_RenderTexture(renderer, atlas, &tiles[cell.c.fg].uv, &dst);	
-		}	
+		if (cell.c.fg.state){
+			SDL_FRect src = {(float)(cell.c.fg.x*bakeSize), (float)(cell.c.fg.y*bakeSize),
+				(float)bakeSize,(float)bakeSize};
+			SDL_RenderTexture(renderer, atlas, &src, &dst);	
+		}
+
 
 		int idx = cell.y * chunkW + cell.x;
 		chunk.c[idx] = cell.c;
