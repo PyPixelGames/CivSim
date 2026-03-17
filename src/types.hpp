@@ -4,6 +4,7 @@
 #include <SDL3_image/SDL_image.h>
 #include <vector>
 #include <unordered_map>
+#include <string>
 
 constexpr int chunkW = 32;
 constexpr int chunkH = 32;
@@ -40,10 +41,10 @@ static constexpr NamedEntry tiles[] = {
 };
 
 enum Terrain{
-    Water = 0,
-    Grass = 1,
+	Water = 0,
+	Grass = 1,
 	Tree = 2,
-    Sand = 3,
+	Sand = 3,
 	Mountain = 4,
 	MountainTop = 5,
 
@@ -63,9 +64,11 @@ struct Cell {
 };
 
 struct GameFont {
-	TTF_Font* ttf      = nullptr;
-	int       baseSize = 64;
+	TTF_Font* ttf = nullptr;
+	int baseSize = 64;
 	std::unordered_map<int, SDL_Texture*> glyphCache;
+	SDL_Texture* fpsTex = nullptr;
+	std::string lastFpsText;
 };
 
 struct EditCell {
@@ -83,3 +86,11 @@ struct Chunk {
 };
 
 struct ChunkCoord { int cx, cy, lx, ly; };
+
+struct Pos {
+    int x, y;
+    
+    bool operator==(const Pos& other) const {
+        return x == other.x && y == other.y;
+    }
+};

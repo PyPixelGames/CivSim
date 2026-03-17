@@ -65,7 +65,8 @@ void editTex(SDL_Renderer* renderer, Chunk& chunk,int bakeSize, SDL_Texture* atl
 	SDL_SetRenderTarget(renderer, chunk.tex);
 
 	for (auto& cell : chunk.cells) {
-		SDL_FRect dst = {(float)(cell.x*bakeSize), (float)(cell.y*bakeSize), (float)bakeSize, (float)bakeSize};
+		SDL_FRect dst = {(float)(cell.x*bakeSize), (float)(cell.y*bakeSize),
+			(float)bakeSize, (float)bakeSize};
 
 
 		if (!cell.c.bg.state){
@@ -87,29 +88,25 @@ void editTex(SDL_Renderer* renderer, Chunk& chunk,int bakeSize, SDL_Texture* atl
 		int idx = cell.y * chunkW + cell.x;
 		chunk.c[idx] = cell.c;
 	}
-
 	SDL_SetRenderTarget(renderer, nullptr);
-	SDL_SetTextureScaleMode(chunk.tex, SDL_SCALEMODE_NEAREST);
 }
 
-void drawFPS(SDL_Renderer* renderer, GameFont& font,
-		float fps, int x, int y) {
-	std::string text = "FPS: " + std::to_string((int)fps);
-	SDL_Color color  = Colors::BLACK;
-
-	SDL_Surface* surf = TTF_RenderText_Blended(font.ttf,text.c_str(), 0,color);
-	if (!surf) return;
-
-	SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surf);
-	SDL_DestroySurface(surf);
-	if (!tex) return;
-
-	float w = 0, h = 0;
-	SDL_GetTextureSize(tex, &w, &h);
-	const float scale = 0.4f;
-	SDL_FRect dst = {(float)x, (float)y, w * scale, h * scale};
-	SDL_RenderTexture(renderer, tex, nullptr, &dst);
-	SDL_DestroyTexture(tex);
+void drawFPS(SDL_Renderer* renderer, GameFont& font, float fps, int x, int y) {
+    std::string text = "FPS: " + std::to_string((int)fps);
+    if (text != font.lastFpsText) {
+        if (font.fpsTex) SDL_DestroyTexture(font.fpsTex);
+        SDL_Surface* surf = TTF_RenderText_Blended(font.ttf, text.c_str(), 0, Colors::BLACK);
+        if (!surf) return;
+        font.fpsTex = SDL_CreateTextureFromSurface(renderer, surf);
+        SDL_DestroySurface(surf);
+        font.lastFpsText = text;
+    }
+    if (!font.fpsTex) return;
+    float w = 0, h = 0;
+    SDL_GetTextureSize(font.fpsTex, &w, &h);
+    const float scale = 0.4f;
+    SDL_FRect dst = {(float)x, (float)y, w * scale, h * scale};
+    SDL_RenderTexture(renderer, font.fpsTex, nullptr, &dst);
 }
 
 ChunkCoord toChunk(int x, int y){

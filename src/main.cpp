@@ -183,7 +183,7 @@ int main() {
 		}	
 		drawFPS(renderer, font, fps, 1, 1);
 
-		SDL_RenderPresent(renderer);	
+		SDL_RenderPresent(renderer);
 	}
 
 	for (auto& [key, chunk] : world)
