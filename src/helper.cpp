@@ -110,5 +110,5 @@ void drawFPS(SDL_Renderer* renderer, GameFont& font, float fps, int x, int y) {
 }
 
 ChunkCoord toChunk(int x, int y){
-	return { x/chunkW, y/chunkH, x%chunkW, y%chunkH };
+	return { x/chunkW, y/chunkH, x%chunkW, y%chunkH, (y%chunkH)*chunkW+(x%chunkW)};
 }

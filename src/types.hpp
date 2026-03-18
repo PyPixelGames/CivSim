@@ -85,7 +85,7 @@ struct Chunk {
 	std::vector<EditCell> cells;
 };
 
-struct ChunkCoord { int cx, cy, lx, ly; };
+struct ChunkCoord { int cx, cy, lx, ly, idx; };
 
 struct Pos {
     int x, y;

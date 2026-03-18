@@ -98,9 +98,8 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 
 			// Actually applying the change
 			Chunk& chunk  = world[key];
-			int index = coords.ly * chunkW + coords.lx;
-			chunk.c[index] = type;
-			chunk.ogC[index] = type;
+			chunk.c[coords.idx] = type;
+			chunk.ogC[coords.idx] = type;
 			dirtyKeys.insert(key);
 
 			heightmap[ty * levelSizeX + tx] = terValue; // world position
@@ -152,9 +151,7 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 			if (world.find(key) == world.end()) break;
 			Chunk& chunk = world[key];
 
-			int index = (cCoords.ly*chunkW+cCoords.lx);	
-
-			if (chunk.c[index].bg.y == Water){
+			if (chunk.c[cCoords.idx].bg.y == Water){
 				cont=false;
 			}
 
@@ -163,39 +160,66 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 		}
 
 		if (std::size(river) > minRiverSize){
+			// Carve water
+			std::vector<Pos> carvedAdditions;
 			for (auto p : river){
-				// Carve out a circle of radius `riverWidth` around each river cell
 				for (int dy = -riverWidth; dy <= riverWidth; dy++){
 					for (int dx = -riverWidth; dx <= riverWidth; dx++){
-						// skip corners
 						if (dx*dx + dy*dy > riverWidth*riverWidth) continue;
-
 						Pos wp{p.x + dx, p.y + dy};
-
 						if (wp.x>0 && wp.x<levelSizeX && wp.y>0 && wp.y<levelSizeY){
 							ChunkCoord cCoords = toChunk(wp.x, wp.y);
 							int64_t key = getKey(cCoords.cx, cCoords.cy);
 							if (world.find(key) == world.end()) continue;
 							Chunk& chunk = world[key];
 							dirtyKeys.insert(key);
+							chunk.c[cCoords.idx].bg.y = Water;
+							chunk.c[cCoords.idx].fg.state = false;
 
-							int index = (cCoords.ly*chunkW+cCoords.lx);
-							chunk.c[index].bg.y = Water;
-							chunk.c[index].fg.state = false;	
+							carvedAdditions.push_back(wp);
 						}
 					}
 				}
 			}
+			
+			for (auto add: carvedAdditions){
+				river.push_back(add);
+			}
+
+			// Sand edges — inside the if block, after water is carved
+			for (auto cellPos : river){
+				for (int y=-1; y<=1; y++){
+					for (int x=-1; x<=1; x++){
+						if (x==0 && y==0) continue; //skip center
+						if (x*x + y*y > 1) continue; //skip corners
+
+						Pos p{cellPos.x+x, cellPos.y+y};
+
+						if (p.x<=0 || p.x>=levelSizeX || p.y<=0 || p.y>=levelSizeY) continue; //safety
+
+						ChunkCoord c = toChunk(p.x, p.y);
+						int64_t key = getKey(c.cx, c.cy);
+						if (world.find(key) == world.end()) continue;
+						Chunk& chunk = world[key];
+						dirtyKeys.insert(key);
+
+						int value = chunk.c[c.idx].bg.y;
+						if (value != Water && value != Mountain && value != MountainTop){
+							chunk.c[c.idx].bg.y = Sand;
+							chunk.c[c.idx].fg.state = false;
+						}
+					}
+				}
+			}
+
 			riverCount++;
 			attempts=0;
 			std::cout << riverCount << std::endl;
-		}else{
+		} else {
 			attempts++;
+			river.clear();
 		}
 	}
-
-
-
 	// Re-bake every chunk that changed
 	for (int64_t key : dirtyKeys) {
 		Chunk& chunk = world[key];
