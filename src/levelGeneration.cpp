@@ -15,9 +15,9 @@ static std::uniform_real_distribution<float> dist(1.0f, 100000.0f);
 static std::uniform_real_distribution<float> biomeBlend(0.0f, 1.0f);
 
 int minRiverSize=50;
-int minRiverAmount=15;
+int minRiverAmount=8;
 int maxRiverAttempts=50000;
-static std::uniform_int_distribution<int> RiverWidth(2, 4);
+static std::uniform_int_distribution<int> RiverWidth(3, 4);
 static std::uniform_int_distribution<int> rp(0, levelSizeX - 1);
 
 
@@ -50,6 +50,8 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 	std::unordered_set<int64_t> dirtyKeys;
 	float heightmap[levelSizeX*levelSizeY];
 
+
+	// Terrain generation
 	for (int ty = 0; ty < levelSizeY; ty++) {
 		for (int tx = 0; tx < levelSizeX; tx++) {
 			ChunkCoord coords = toChunk(tx, ty);
@@ -63,9 +65,9 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 			float biomeValue = biomeNoise.GetNoise((float)(tx + biomeVarX),(float)(ty + biomeVarY));
 			biomeValue = (biomeValue + 1.0f) / 2.0f; 
 
-			if (biomeValue >= 0.505f){
+			if (biomeValue >= 0.605f){
 				type.bg.x = SNOWY;
-			}else if(biomeValue >= 0.495){
+			}else if(biomeValue >= 0.595){
 				float r = biomeBlend(rng);
 
 				if (r>=0.5) {type.bg.x = FIELDS;}
@@ -160,12 +162,20 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 		}
 
 		if (std::size(river) > minRiverSize){
+			int length = std::size(river);
 			// Carve water
 			std::vector<Pos> carvedAdditions;
-			for (auto p : river){
-				for (int dy = -riverWidth; dy <= riverWidth; dy++){
-					for (int dx = -riverWidth; dx <= riverWidth; dx++){
-						if (dx*dx + dy*dy > riverWidth*riverWidth) continue;
+			for (int i = 0; i < river.size(); i++) {
+				auto p = river[i];
+
+				float t = (float)i / (float)(length - 1);
+
+				// Taper from full riverWidth down to 1 at the mouth
+				int currentWidth = std::max(1, (int)std::round(riverWidth * t));	
+
+				for (int dy = -currentWidth; dy <= currentWidth; dy++) {
+					for (int dx = -currentWidth; dx <= currentWidth; dx++) {
+						if (dx*dx + dy*dy > currentWidth*currentWidth) continue;
 						Pos wp{p.x + dx, p.y + dy};
 						if (wp.x>0 && wp.x<levelSizeX && wp.y>0 && wp.y<levelSizeY){
 							ChunkCoord cCoords = toChunk(wp.x, wp.y);
@@ -181,7 +191,7 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 					}
 				}
 			}
-			
+
 			for (auto add: carvedAdditions){
 				river.push_back(add);
 			}
