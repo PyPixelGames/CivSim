@@ -112,3 +112,35 @@ void drawFPS(SDL_Renderer* renderer, GameFont& font, float fps, int x, int y) {
 ChunkCoord toChunk(int x, int y){
 	return { x/chunkW, y/chunkH, x%chunkW, y%chunkH, (y%chunkH)*chunkW+(x%chunkW)};
 }
+
+
+void updateVisibleChunks(std::unordered_map<int64_t, Chunk>& world, SDL_Renderer* renderer,
+		SDL_Texture* atlas,int minCX,int maxCX,int minCY,int maxCY,int bakeSize) {
+    // Bake newly visible chunks
+    for (int cy = minCY; cy <= maxCY; cy++) {
+        for (int cx = minCX; cx <= maxCX; cx++) {
+            int64_t key = getKey(cx, cy);
+            auto it = world.find(key);
+            if (it == world.end()) continue;
+
+            Chunk& chunk = it->second;
+            if (!chunk.tex) {
+                chunk.tex = chunkTex(renderer, chunk, bakeSize, atlas);
+            }
+        }
+    }
+
+    // Unload distant chunks (small margin so we don't blink on chunk borders)
+    const int unloadMargin = 3;
+    for (auto& [key, chunk] : world) {
+        int cx = (int)(key >> 32);
+        int cy = (int)(uint32_t(key));
+        if (cx < minCX - unloadMargin || cx > maxCX + unloadMargin ||
+            cy < minCY - unloadMargin || cy > maxCY + unloadMargin) {
+            if (chunk.tex) {
+                SDL_DestroyTexture(chunk.tex);
+                chunk.tex = nullptr;
+            }
+        }
+    }
+}

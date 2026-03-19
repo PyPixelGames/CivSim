@@ -23,3 +23,6 @@ void drawFPS(SDL_Renderer* renderer, GameFont& font,
 		float fps, int x, int y);
 
 ChunkCoord toChunk(int x, int y);
+
+void updateVisibleChunks(std::unordered_map<int64_t, Chunk>& world, SDL_Renderer* renderer,
+		SDL_Texture* atlas,int minCX,int maxCX,int minCY,int maxCY,int bakeSize);

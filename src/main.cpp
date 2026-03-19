@@ -159,6 +159,9 @@ int main() {
 		int minChunkY = worldY / (chunkH * (cellSize-gapSize));
 		int maxChunkY = minChunkY + (height / (chunkH * (cellSize-gapSize))) + 2;
 
+		updateVisibleChunks(world, renderer, atlas,
+                    minChunkX, maxChunkX, minChunkY, maxChunkY, bakeSize);  
+
 		for (int cy = minChunkY; cy <= maxChunkY; cy++) {
 			for (int cx = minChunkX; cx <= maxChunkX; cx++) {
 				int64_t key = getKey(cx, cy);

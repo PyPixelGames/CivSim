@@ -7,8 +7,8 @@
 #include <iostream>
 #include <algorithm>
 
-static int levelSizeX = 640;
-static int levelSizeY = 640;
+static int levelSizeX = 640*2;
+static int levelSizeY = 640*2;
 static std::mt19937 rng(std::random_device{}());
 static std::uniform_real_distribution<float> dist(1.0f, 100000.0f);
 
@@ -231,9 +231,9 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 		}
 	}
 	// Re-bake every chunk that changed
-	for (int64_t key : dirtyKeys) {
-		Chunk& chunk = world[key];
-		if (chunk.tex) SDL_DestroyTexture(chunk.tex);
-		chunk.tex = chunkTex(renderer, chunk, s, atlas);
-	}
+	//for (int64_t key : dirtyKeys) {
+	//	Chunk& chunk = world[key];
+	//	if (chunk.tex) SDL_DestroyTexture(chunk.tex);
+	//	chunk.tex = chunkTex(renderer, chunk, s, atlas);
+	//}
 }
