@@ -77,7 +77,7 @@ int main() {
 	bool running = true;
 	SDL_Event event;
 
-	Mover testMover(0, 0);
+	Mover testMover({0, 0}, world);
 
 	Uint64 lastTime = SDL_GetTicks();
 	float deltaTime;

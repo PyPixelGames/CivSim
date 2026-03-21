@@ -54,6 +54,7 @@ add_executable(CivSim
     src/helper.cpp
     src/levelGeneration.cpp
     src/mover.cpp
+	src/pathFinding.cpp
 )
 target_include_directories(CivSim PRIVATE
     ${CMAKE_SOURCE_DIR}/src

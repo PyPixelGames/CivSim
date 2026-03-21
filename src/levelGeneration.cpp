@@ -7,15 +7,15 @@
 #include <iostream>
 #include <algorithm>
 
-static int levelSizeX = 640*2;
-static int levelSizeY = 640*2;
-static std::mt19937 rng(std::random_device{}());
+static int amount = 2;
+static int levelSizeX = 640*amount;
+static int levelSizeY = 640*amount;
 static std::uniform_real_distribution<float> dist(1.0f, 100000.0f);
 
 static std::uniform_real_distribution<float> biomeBlend(0.0f, 1.0f);
 
 int minRiverSize=50;
-int minRiverAmount=8;
+int minRiverAmount=8*amount;
 int maxRiverAttempts=50000;
 static std::uniform_int_distribution<int> RiverWidth(3, 4);
 static std::uniform_int_distribution<int> rp(0, levelSizeX - 1);
