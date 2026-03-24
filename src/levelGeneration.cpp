@@ -2,6 +2,7 @@
 #include "helper.hpp"
 #include "FastNoiseLite.h"
 #include "types.hpp"
+#include "pathFinding.hpp"
 #include <random>
 #include <unordered_set>
 #include <iostream>
@@ -14,12 +15,22 @@ static std::uniform_real_distribution<float> dist(1.0f, 100000.0f);
 
 static std::uniform_real_distribution<float> biomeBlend(0.0f, 1.0f);
 
-int minRiverSize=50;
+int minRiverSize=100;
 int minRiverAmount=8*amount;
-int maxRiverAttempts=50000;
+int maxRiverAttempts=5000;
+int riverCheckRadius=30;
 static std::uniform_int_distribution<int> RiverWidth(3, 4);
 static std::uniform_int_distribution<int> rp(0, levelSizeX - 1);
 
+int riversStuck=0;
+int riversSmall=0;
+
+float checkHeightValue(Pos pos, float heightmap[]){
+	if (pos.x < 0 || pos.x >= levelSizeX ||
+			pos.y < 0 || pos.y >= levelSizeY) return 0.0f;
+
+	return heightmap[(pos.y)*levelSizeX+(pos.x)];
+}
 
 void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* renderer,int s, SDL_Texture* atlas) {	
 	float varX = dist(rng);
@@ -133,12 +144,10 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 					if (x==0 && y==0) continue;
 
 					Pos candidate{pos.x+x, pos.y+y};
+
 					if (std::find(river.begin(), river.end(), candidate) != river.end()) continue;
 
-					if (candidate.x < 0 || candidate.x >= levelSizeX ||
-							candidate.y < 0 || candidate.y >= levelSizeY) continue;
-
-					float height = heightmap[(pos.y+y)*levelSizeX+(pos.x+x)];
+					float height = checkHeightValue(candidate, heightmap);
 					if (height < lastNeighbour.first){
 						lastNeighbour.first = height;
 						lastNeighbour.second = candidate;
@@ -146,7 +155,43 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 				}
 			}
 
-			if (lastNeighbour.second == pos) break; //stuck
+			if (lastNeighbour.second == pos){//stuck
+				Pos p = lastNeighbour.second;
+				std::pair<float, Pos> lowestValue{lastNeighbour.first, {-1, -1}};
+				for (int y=p.y-riverCheckRadius; y<=p.y+riverCheckRadius; y++){
+					for (int x=p.x-riverCheckRadius; x<=p.x+riverCheckRadius; x++){
+						if (x==riverCheckRadius && y==riverCheckRadius) continue;
+						Pos candidate{x, y};
+
+						float height = checkHeightValue(candidate, heightmap);
+						if (height < lowestValue.first){
+							lowestValue.first=height;
+							lowestValue.second=candidate;
+						}
+					}
+				}
+
+				if (lowestValue.first != lastNeighbour.first){
+					std::vector<Pos> tempPath = astar(lastNeighbour.second,lowestValue.second, 
+						world, true);
+					bool state=false;
+					for (auto p: tempPath){
+						if (checkCell(world, p).bg.y != Water){
+							river.push_back(p);
+						}else{state=true;break;}
+					}
+
+					lastNeighbour.first=lowestValue.first;
+					lastNeighbour.second=lowestValue.second;
+
+					if (state) break;
+
+
+				}else{
+					riversStuck++;
+					break;
+				}
+			}
 
 			ChunkCoord cCoords = toChunk(lastNeighbour.second.x, lastNeighbour.second.y);
 			int64_t key = getKey(cCoords.cx, cCoords.cy);
@@ -227,13 +272,11 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 			std::cout << riverCount << std::endl;
 		} else {
 			attempts++;
+			riversSmall++;
 			river.clear();
 		}
 	}
-	// Re-bake every chunk that changed
-	//for (int64_t key : dirtyKeys) {
-	//	Chunk& chunk = world[key];
-	//	if (chunk.tex) SDL_DestroyTexture(chunk.tex);
-	//	chunk.tex = chunkTex(renderer, chunk, s, atlas);
-	//}
+
+	std::cout << "rivers stuck: " << riversStuck << std::endl;
+	std::cout << "rivers small: " << riversSmall << std::endl;
 }

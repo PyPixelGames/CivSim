@@ -14,9 +14,10 @@
 float heuristic(Pos a, Pos b);
 
 struct Node {
-    Pos pos;
-    float g, f;
-    bool operator>(const Node& o) const { return f > o.f; }
+	Pos pos;
+	float g, f;
+	bool operator>(const Node& o) const { return f > o.f; }
 };
 
-std::vector<Pos> astar(Pos start, Pos goal, std::unordered_map<int64_t, Chunk>& world);
+std::vector<Pos> astar(Pos start, Pos goal, std::unordered_map<int64_t, Chunk>& world,
+		float skipCheck=false);

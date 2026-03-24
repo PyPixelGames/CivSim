@@ -8,8 +8,7 @@ float heuristic(Pos a, Pos b) {
     return std::sqrt(dx*dx + dy*dy);
 }
 
-
-std::vector<Pos> astar(Pos start, Pos goal, std::unordered_map<int64_t, Chunk>& world) {
+std::vector<Pos> astar(Pos start, Pos goal, std::unordered_map<int64_t, Chunk>& world, float skipChecks){
     std::priority_queue<Node, std::vector<Node>, std::greater<Node>> open;
     std::unordered_map<int64_t, float> gScore;
     std::unordered_map<int64_t, Pos>  cameFrom;
@@ -41,9 +40,10 @@ std::vector<Pos> astar(Pos start, Pos goal, std::unordered_map<int64_t, Chunk>& 
 
         for (int i = 0; i < 8; i++) {
             Pos nb{cur.pos.x + dx[i], cur.pos.y + dy[i]};
-           
+
+			// check if the tile is available
 			Cell c = checkCell(world, nb);
-            if (c.bg.y == Terrain::Water || c.fg.state) continue;
+            if (skipChecks==false && (c.bg.y == Terrain::Water || c.fg.state)) continue;
 
             float tentG = gScore[key(cur.pos)] + cost[i];
             if (!gScore.count(key(nb)) || tentG < gScore[key(nb)]) {
