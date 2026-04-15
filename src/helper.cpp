@@ -165,3 +165,10 @@ Cell checkCell(std::unordered_map<int64_t, Chunk>& world, Pos p){
 	if (it == world.end()) return Cell{}; // sentinel
 	return it->second.c[coords.ly * chunkW + coords.lx];
 }
+
+float clampFloat(float f, float l, float h){
+	if (f < l) f = l;
+	if (f > h) f = h;
+
+	return f;
+}

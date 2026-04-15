@@ -53,7 +53,8 @@ add_executable(CivSim
     src/main.cpp
     src/helper.cpp
     src/levelGeneration.cpp
-    src/mover.cpp
+    src/creature.cpp
+	src/civ.cpp
 	src/pathFinding.cpp
 )
 target_include_directories(CivSim PRIVATE

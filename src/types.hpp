@@ -88,9 +88,9 @@ struct Chunk {
 struct ChunkCoord { int cx, cy, lx, ly, idx; };
 
 struct Pos {
-    int x, y;
-    
-    bool operator==(const Pos& other) const {
-        return x == other.x && y == other.y;
-    }
+	int x, y;
+
+	bool operator==(const Pos& other) const {
+		return x == other.x && y == other.y;
+	}
 };

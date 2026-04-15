@@ -8,7 +8,7 @@
 #include <iostream>
 #include <algorithm>
 
-static int amount = 2;
+static int amount = 1;
 static int levelSizeX = 640*amount;
 static int levelSizeY = 640*amount;
 static std::uniform_real_distribution<float> dist(1.0f, 100000.0f);
@@ -16,7 +16,7 @@ static std::uniform_real_distribution<float> dist(1.0f, 100000.0f);
 static std::uniform_real_distribution<float> biomeBlend(0.0f, 1.0f);
 
 int minRiverSize=100;
-int minRiverAmount=8*amount;
+int minRiverAmount=0*amount;
 int maxRiverAttempts=5000;
 int riverCheckRadius=30;
 static std::uniform_int_distribution<int> RiverWidth(3, 4);

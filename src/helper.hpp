@@ -34,3 +34,5 @@ void updateVisibleChunks(std::unordered_map<int64_t, Chunk>& world, SDL_Renderer
 void changeCell(std::unordered_map<int64_t, Chunk>& world,Pos p,Cell c,bool restore);
 
 Cell checkCell(std::unordered_map<int64_t, Chunk>& world, Pos p);
+
+float clampFloat(float f, float l, float h);

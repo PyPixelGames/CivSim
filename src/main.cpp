@@ -7,7 +7,7 @@
 #include "types.hpp"
 #include "helper.hpp"
 #include "levelGeneration.hpp"
-#include "mover.hpp"
+#include "civ.hpp"
 
 using namespace Colors;
 
@@ -77,12 +77,17 @@ int main() {
 	bool running = true;
 	SDL_Event event;
 
-	Mover testMover({0, 0}, world);
+	Civ testCiv;
+
+	for (size_t i=0; i<5; i++){
+		Creature* c = new Creature({0, 0}, world);
+		testCiv.creatures.push_back(c);
+	}
 
 	Uint64 lastTime = SDL_GetTicks();
 	float deltaTime;
 	float updateAccumulator = 0.0f;
-	const float updateInterval = 0.5f;
+	const float updateInterval = 0.1f;
 
 	while (running) {
 		frameCount++;
@@ -119,7 +124,7 @@ int main() {
 			float scale = newCellSize / cellSize;
 			worldX = (int)((worldX + mx) * scale - mx);
 			worldY = (int)((worldY + my) * scale - my);
-	
+
 			if (worldX < 0){
 				worldX = 0;
 			}
@@ -150,8 +155,9 @@ int main() {
 
 		updateAccumulator += deltaTime;
 		if (updateAccumulator >= updateInterval) {
-			testMover.update(world);
 			updateAccumulator -= updateInterval;
+
+			testCiv.update(world);
 		}
 
 		int minChunkX = worldX / (chunkW * (cellSize-gapSize));
@@ -160,7 +166,7 @@ int main() {
 		int maxChunkY = minChunkY + (height / (chunkH * (cellSize-gapSize))) + 2;
 
 		updateVisibleChunks(world, renderer, atlas,
-                    minChunkX, maxChunkX, minChunkY, maxChunkY, bakeSize);  
+				minChunkX, maxChunkX, minChunkY, maxChunkY, bakeSize);  
 
 		for (int cy = minChunkY; cy <= maxChunkY; cy++) {
 			for (int cx = minChunkX; cx <= maxChunkX; cx++) {
@@ -200,6 +206,7 @@ int main() {
 	SDL_DestroyWindow(window);
 	TTF_Quit();
 	SDL_Quit();
+	testCiv.clear();
 
 	std::cout << "unloaded\n";
 	return 0;
