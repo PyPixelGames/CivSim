@@ -43,26 +43,36 @@ struct Meals{
 class Creature{
 	public:
 		Pos pos;
+		Cell cell;
+
 		std::vector<Pos> path;
 		Mood mood;
 		Meals meal;
+		
+		int id;
 
-		Creature(Pos pos,std::unordered_map<int64_t,Chunk>& world):pos(pos){
+		Creature(Pos pos,std::unordered_map<int64_t,Chunk>& world,
+				int id=0):pos(pos), id(id){
+			
+			cell.fg.row=2; cell.fg.column=id; cell.fg.state=true;
+			cell.bg.row=0; cell.bg.column=0; cell.bg.state=true;
+
 			bool search = true;
 			Pos goal;
 			while (search){
 				goal.x = RandomPos(rng);
 				goal.y = RandomPos(rng);
 				Cell c = checkCell(world, goal);
-				if (c.bg.y != Water && c.fg.state!=true){
+				if (c.bg.column != Water && c.fg.state!=true){
 					break;
 				}
 			}
 			std::cout << goal.x << " - " << goal.y << std::endl;
-			path = astar(pos, goal, world);
+			path = astar(pos, goal, world);	
 		}
 
-		void update(std::unordered_map<int64_t, Chunk>& world);
+		void update(std::unordered_map<int64_t, Chunk>& world,
+				std::vector <Creature*> creatures);
 
 		void updateMood();
 

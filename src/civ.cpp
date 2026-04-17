@@ -4,7 +4,7 @@
 void Civ::update(std::unordered_map<int64_t, Chunk>& world){
 	for (size_t i=0; i<creatures.size(); i++){
 		Creature *c = creatures[i];
-		c->update(world);
+		c->update(world, creatures);
 	}
 }
 

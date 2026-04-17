@@ -79,8 +79,8 @@ int main() {
 
 	Civ testCiv;
 
-	for (size_t i=0; i<5; i++){
-		Creature* c = new Creature({0, 0}, world);
+	for (size_t i=0; i<2; i++){
+		Creature* c = new Creature({0, 0}, world, i);
 		testCiv.creatures.push_back(c);
 	}
 

@@ -77,34 +77,34 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 			biomeValue = (biomeValue + 1.0f) / 2.0f; 
 
 			if (biomeValue >= 0.605f){
-				type.bg.x = SNOWY;
+				type.bg.row = SNOWY;
 			}else if(biomeValue >= 0.595){
 				float r = biomeBlend(rng);
 
-				if (r>=0.5) {type.bg.x = FIELDS;}
-				else        {type.bg.x = SNOWY;}
+				if (r>=0.5) {type.bg.row = FIELDS;}
+				else        {type.bg.row = SNOWY;}
 			}else{
-				type.bg.x = FIELDS;
+				type.bg.row = FIELDS;
 			}
 
 			// Base terrain generation
 			float terValue = terNoise.GetNoise((float)(tx + varX), (float)(ty + varY));
 			terValue = (terValue + 1.0f) / 2.0f;
 
-			if (terValue >= 0.85f){type.bg.y= MountainTop;}
-			else if (terValue >= 0.78f) {type.bg.y= Mountain;}
-			else if (terValue >= 0.37f) {type.bg.y= Grass;}
-			else if (terValue >= 0.33f) {type.bg.y= Sand;}
-			else                     {type.bg.y= Water;}
+			if (terValue >= 0.85f){type.bg.column= MountainTop;}
+			else if (terValue >= 0.78f) {type.bg.column= Mountain;}
+			else if (terValue >= 0.37f) {type.bg.column= Grass;}
+			else if (terValue >= 0.33f) {type.bg.column= Sand;}
+			else                     {type.bg.column= Water;}
 			type.bg.state=true;
 
 
 			// Vegitation generation
 			float vegValue = vegNoise.GetNoise((float)(tx+vegVarX), (float)(ty+vegVarY));
 			vegValue = (vegValue + 1.0f) / 2.0f;
-			if (vegValue >= 0.70f && type.bg.y== Grass && terValue<=0.5){
-				type.fg.y= Tree;
-				type.fg.x= type.bg.x;
+			if (vegValue >= 0.70f && type.bg.column== Grass && terValue<=0.5){
+				type.fg.column= Tree;
+				type.fg.row= type.bg.row;
 				type.fg.state=true;
 			}
 
@@ -176,7 +176,7 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 						world, true);
 					bool state=false;
 					for (auto p: tempPath){
-						if (checkCell(world, p).bg.y != Water){
+						if (checkCell(world, p).bg.column != Water){
 							river.push_back(p);
 						}else{state=true;break;}
 					}
@@ -198,7 +198,7 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 			if (world.find(key) == world.end()) break;
 			Chunk& chunk = world[key];
 
-			if (chunk.c[cCoords.idx].bg.y == Water){
+			if (chunk.c[cCoords.idx].bg.column == Water){
 				cont=false;
 			}
 
@@ -228,7 +228,7 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 							if (world.find(key) == world.end()) continue;
 							Chunk& chunk = world[key];
 							dirtyKeys.insert(key);
-							chunk.c[cCoords.idx].bg.y = Water;
+							chunk.c[cCoords.idx].bg.column = Water;
 							chunk.c[cCoords.idx].fg.state = false;
 
 							carvedAdditions.push_back(wp);
@@ -258,9 +258,9 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 						Chunk& chunk = world[key];
 						dirtyKeys.insert(key);
 
-						int value = chunk.c[c.idx].bg.y;
+						int value = chunk.c[c.idx].bg.column;
 						if (value != Water && value != Mountain && value != MountainTop){
-							chunk.c[c.idx].bg.y = Sand;
+							chunk.c[c.idx].bg.column = Sand;
 							chunk.c[c.idx].fg.state = false;
 						}
 					}

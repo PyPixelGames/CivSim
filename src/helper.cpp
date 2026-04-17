@@ -11,8 +11,7 @@ Chunk makeChunk(){
 	return c;
 }
 
-void populateChunks(std::unordered_map<int64_t, Chunk>& world,int chunksX, int chunksY,
-		int s) {
+void populateChunks(std::unordered_map<int64_t, Chunk>& world,int chunksX, int chunksY,int s) {
 	for (int cy = 0; cy < chunksY; cy++)
 		for (int cx = 0; cx < chunksX; cx++) {
 			int64_t key = getKey(cx, cy);
@@ -42,13 +41,13 @@ SDL_Texture* chunkTex(SDL_Renderer* renderer, Chunk& chunk, int bakeSize, SDL_Te
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 			SDL_RenderFillRect(renderer, &dst);
 		}else{
-			SDL_FRect src = {(float)(chunk.c[i].bg.x*bakeSize), (float)(chunk.c[i].bg.y*bakeSize),
+			SDL_FRect src = {(float)(chunk.c[i].bg.row*bakeSize), (float)(chunk.c[i].bg.column*bakeSize),
 				(float)bakeSize,(float)bakeSize};
 			SDL_RenderTexture(renderer, atlas, &src, &dst); 
 		}
 
 		if (chunk.c[i].fg.state){
-			SDL_FRect src = {(float)(chunk.c[i].fg.x*bakeSize), (float)(chunk.c[i].fg.y*bakeSize),
+			SDL_FRect src = {(float)(chunk.c[i].fg.row*bakeSize), (float)(chunk.c[i].fg.column*bakeSize),
 				(float)bakeSize,(float)bakeSize};
 			SDL_RenderTexture(renderer, atlas, &src, &dst);	
 		}
@@ -73,13 +72,13 @@ void editTex(SDL_Renderer* renderer, Chunk& chunk,int bakeSize, SDL_Texture* atl
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 			SDL_RenderFillRect(renderer, &dst);
 		}else{
-			SDL_FRect src = {(float)(cell.c.bg.x*bakeSize), (float)(cell.c.bg.y*bakeSize),
+			SDL_FRect src = {(float)(cell.c.bg.row*bakeSize), (float)(cell.c.bg.column*bakeSize),
 				(float)bakeSize,(float)bakeSize};
 			SDL_RenderTexture(renderer, atlas, &src, &dst); 
 		}
 
 		if (cell.c.fg.state){
-			SDL_FRect src = {(float)(cell.c.fg.x*bakeSize), (float)(cell.c.fg.y*bakeSize),
+			SDL_FRect src = {(float)(cell.c.fg.row*bakeSize), (float)(cell.c.fg.column*bakeSize),
 				(float)bakeSize,(float)bakeSize};
 			SDL_RenderTexture(renderer, atlas, &src, &dst);	
 		}

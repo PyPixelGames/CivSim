@@ -1,0 +1,7 @@
+//DOING - add interactions between creatures of the same Civilization
+
+Add seperate sprites for every creature.
+
+Add states and mood of the whole civilization.
+
+

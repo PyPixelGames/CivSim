@@ -43,7 +43,7 @@ std::vector<Pos> astar(Pos start, Pos goal, std::unordered_map<int64_t, Chunk>& 
 
 			// check if the tile is available
 			Cell c = checkCell(world, nb);
-            if (skipChecks==false && (c.bg.y == Terrain::Water || c.fg.state)) continue;
+            if (skipChecks==false && (c.bg.column == Terrain::Water || c.fg.state)) continue;
 
             float tentG = gScore[key(cur.pos)] + cost[i];
             if (!gScore.count(key(nb)) || tentG < gScore[key(nb)]) {

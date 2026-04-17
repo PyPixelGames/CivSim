@@ -53,8 +53,8 @@ enum Terrain{
 };
 
 struct AtlasPos{
-	short int x=0;
-	short int y=0;
+	short int row=0;
+	short int column=0;
 	bool state=false;
 };
 
@@ -92,5 +92,15 @@ struct Pos {
 
 	bool operator==(const Pos& other) const {
 		return x == other.x && y == other.y;
+	}
+
+	int distance(Pos& other) {
+		int output = ((x-other.x)+(y-other.y))/2;
+
+		if (output>0){
+			return output;
+		}else{
+			return output*-1;
+		}
 	}
 };
