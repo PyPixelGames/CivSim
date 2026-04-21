@@ -3,7 +3,6 @@
 #include <SDL3_image/SDL_image.h>
 #include <iostream>
 #include <vector>
-#include <string>
 #include "types.hpp"
 #include "helper.hpp"
 #include "levelGeneration.hpp"
@@ -35,12 +34,12 @@ int main() {
 		SDL_DestroyWindow(window); TTF_Quit(); SDL_Quit();
 		return 1;
 	}
-	SDL_SetRenderVSync(renderer, 1);
+	SDL_SetRenderVSync(renderer, 0);
 
 	int width = 0, height = 0;
-	SDL_GetRenderOutputSize(renderer, &width, &height);	
+	SDL_GetRenderOutputSize(renderer, &width, &height);
 
-	float cellSize = 32;
+	float cellSize = 64;
 	int worldX = 0;
 	int worldY = 0;
 	int sizeChange = 50;
@@ -58,7 +57,7 @@ int main() {
 		return 1;
 	}
 
-	SDL_Texture *atlas = IMG_LoadTexture(renderer, "../src/images/atlas.png");	
+	SDL_Texture *atlas = IMG_LoadTexture(renderer, "../src/images/atlas.png");
 
 	if (!atlas) {
 		std::cerr << "Atlas load failed: " << SDL_GetError() << "\n";
@@ -124,16 +123,27 @@ int main() {
 			float scale = newCellSize / cellSize;
 			worldX = (int)((worldX + mx) * scale - mx);
 			worldY = (int)((worldY + my) * scale - my);
-
-			if (worldX < 0){
-				worldX = 0;
-			}
-
-			if (worldY < 0){
-				worldY = 0;
-			}
-
+			if (worldX < 0) worldX = 0;
+			if (worldY < 0) worldY = 0;
 			cellSize = newCellSize;
+
+			int newBakeSize;
+			if      (cellSize >= 32) newBakeSize = ogBakeSize;
+			else if (cellSize >= 16) newBakeSize = ogBakeSize/2;
+			else                     newBakeSize = ogBakeSize/16;
+
+			if (newBakeSize != bakeSize) {
+				bakeSize = newBakeSize;
+				stride = bakeSize - gapSize;
+				for (auto& [key, chunk] : world) {
+					if (chunk.tex) {
+						SDL_DestroyTexture(chunk.tex);
+						chunk.tex = nullptr;
+					}
+				}
+			}
+
+			stride = bakeSize - gapSize;
 		};
 
 		if (buttons & SDL_BUTTON_LMASK) {
@@ -151,7 +161,7 @@ int main() {
 
 		SDL_SetRenderTarget(renderer, nullptr);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		SDL_RenderClear(renderer);	
+		SDL_RenderClear(renderer);
 
 		updateAccumulator += deltaTime;
 		if (updateAccumulator >= updateInterval) {
@@ -166,7 +176,7 @@ int main() {
 		int maxChunkY = minChunkY + (height / (chunkH * (cellSize-gapSize))) + 2;
 
 		updateVisibleChunks(world, renderer, atlas,
-				minChunkX, maxChunkX, minChunkY, maxChunkY, bakeSize);  
+				minChunkX, maxChunkX, minChunkY, maxChunkY, bakeSize);
 
 		for (int cy = minChunkY; cy <= maxChunkY; cy++) {
 			for (int cx = minChunkX; cx <= maxChunkX; cx++) {
@@ -189,7 +199,7 @@ int main() {
 				SDL_FRect dst = {destX, destY, destW, destH};
 				SDL_RenderTexture(renderer, chunk.tex, nullptr, &dst);
 			}
-		}	
+		}
 		drawFPS(renderer, font, fps, 1, 1);
 
 		SDL_RenderPresent(renderer);

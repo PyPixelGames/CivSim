@@ -9,8 +9,9 @@
 constexpr int chunkW = 32;
 constexpr int chunkH = 32;
 constexpr int gapSize=0; //increase this to make the gaps smaller
-constexpr int bakeSize=64;
-constexpr float stride = bakeSize-gapSize;
+constexpr int ogBakeSize=64;
+inline int bakeSize=64;
+inline float stride = bakeSize-gapSize;
 
 constexpr SDL_Color bg = {25, 25, 25, 255};
 

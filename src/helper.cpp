@@ -1,5 +1,5 @@
 #include "helper.hpp"
-#include <sstream>
+#include "types.hpp"
 
 int64_t getKey(int cx, int cy) {
 	return (int64_t(cx) << 32) | int64_t(uint32_t(cy));
@@ -41,15 +41,17 @@ SDL_Texture* chunkTex(SDL_Renderer* renderer, Chunk& chunk, int bakeSize, SDL_Te
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 			SDL_RenderFillRect(renderer, &dst);
 		}else{
-			SDL_FRect src = {(float)(chunk.c[i].bg.row*bakeSize), (float)(chunk.c[i].bg.column*bakeSize),
-				(float)bakeSize,(float)bakeSize};
-			SDL_RenderTexture(renderer, atlas, &src, &dst); 
+			SDL_FRect src = {(float)(chunk.c[i].bg.row*ogBakeSize),
+				(float)(chunk.c[i].bg.column*ogBakeSize),
+				(float)ogBakeSize,(float)ogBakeSize};
+			SDL_RenderTexture(renderer, atlas, &src, &dst);
 		}
 
 		if (chunk.c[i].fg.state){
-			SDL_FRect src = {(float)(chunk.c[i].fg.row*bakeSize), (float)(chunk.c[i].fg.column*bakeSize),
-				(float)bakeSize,(float)bakeSize};
-			SDL_RenderTexture(renderer, atlas, &src, &dst);	
+			SDL_FRect src = {(float)(chunk.c[i].fg.row*ogBakeSize),
+				(float)(chunk.c[i].fg.column*ogBakeSize),
+				(float)ogBakeSize,(float)ogBakeSize};
+			SDL_RenderTexture(renderer, atlas, &src, &dst);
 		}
 	}
 
@@ -72,15 +74,15 @@ void editTex(SDL_Renderer* renderer, Chunk& chunk,int bakeSize, SDL_Texture* atl
 			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 			SDL_RenderFillRect(renderer, &dst);
 		}else{
-			SDL_FRect src = {(float)(cell.c.bg.row*bakeSize), (float)(cell.c.bg.column*bakeSize),
-				(float)bakeSize,(float)bakeSize};
-			SDL_RenderTexture(renderer, atlas, &src, &dst); 
+			SDL_FRect src = {(float)(cell.c.bg.row*ogBakeSize), (float)(cell.c.bg.column*ogBakeSize),
+				(float)ogBakeSize,(float)ogBakeSize};
+			SDL_RenderTexture(renderer, atlas, &src, &dst);
 		}
 
 		if (cell.c.fg.state){
-			SDL_FRect src = {(float)(cell.c.fg.row*bakeSize), (float)(cell.c.fg.column*bakeSize),
-				(float)bakeSize,(float)bakeSize};
-			SDL_RenderTexture(renderer, atlas, &src, &dst);	
+			SDL_FRect src = {(float)(cell.c.fg.row*ogBakeSize), (float)(cell.c.fg.column*ogBakeSize),
+				(float)ogBakeSize,(float)ogBakeSize};
+			SDL_RenderTexture(renderer, atlas, &src, &dst);
 		}
 
 

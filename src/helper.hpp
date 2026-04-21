@@ -2,8 +2,6 @@
 #include "types.hpp"
 #include <unordered_map>
 #include <cstdint>
-#include <string>
-#include <vector>
 #include <random>
 
 static std::mt19937 rng(std::random_device{}());

@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <iostream>
 
-void Creature::update(std::unordered_map<int64_t, Chunk>& world, 
+void Creature::update(std::unordered_map<int64_t, Chunk>& world,
 		std::vector<Creature*> creatures){
 	if (!alive) return;
 	if (path.size()>0){
@@ -13,6 +13,8 @@ void Creature::update(std::unordered_map<int64_t, Chunk>& world,
 		pos = nextPos;
 		changeCell(world, pos, cell, false); // place
 		path.erase(path.begin());
+	}else{
+		return;
 	}
 
 	for (auto crt : creatures){
