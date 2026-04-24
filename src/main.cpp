@@ -34,7 +34,7 @@ int main() {
 		SDL_DestroyWindow(window); TTF_Quit(); SDL_Quit();
 		return 1;
 	}
-	SDL_SetRenderVSync(renderer, 0);
+	SDL_SetRenderVSync(renderer, true);
 
 	int width = 0, height = 0;
 	SDL_GetRenderOutputSize(renderer, &width, &height);
@@ -79,7 +79,7 @@ int main() {
 	Civ testCiv;
 
 	for (size_t i=0; i<2; i++){
-		Creature* c = new Creature({0, 0}, world, i);
+		Human* c = new Human({0, 0}, world, i);
 		testCiv.creatures.push_back(c);
 	}
 
@@ -87,6 +87,8 @@ int main() {
 	float deltaTime;
 	float updateAccumulator = 0.0f;
 	const float updateInterval = 0.1f;
+	const int maxUpdateChunks = 15;
+	int chunksUpdated=0;
 
 	while (running) {
 		frameCount++;
@@ -185,9 +187,10 @@ int main() {
 
 				Chunk& chunk = world[key];
 
-				if (!chunk.cells.empty()){
+				if (!chunk.cells.empty() && chunksUpdated<maxUpdateChunks){
 					editTex(renderer, chunk, bakeSize, atlas);
 					chunk.cells.clear();
+					chunksUpdated++;
 				}
 
 				float destW = (float)(chunkW * (cellSize - gapSize));
@@ -201,6 +204,8 @@ int main() {
 			}
 		}
 		drawFPS(renderer, font, fps, 1, 1);
+		chunksUpdated=0;
+
 
 		SDL_RenderPresent(renderer);
 	}

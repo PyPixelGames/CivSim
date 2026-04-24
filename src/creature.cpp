@@ -20,7 +20,7 @@ void Creature::update(std::unordered_map<int64_t, Chunk>& world,
 	for (auto crt : creatures){
 		if (crt->id != id && id == 0){ //REMOVE id == 0, this is for testing
 			int dis = pos.distance(crt->pos);
-			if (dis < 5){
+			if (dis < dna.find("sight")->value){
 				std::cout << "Distance: " <<  dis << "   " <<
 					" Id: " << crt->id << std::endl;
 			}
@@ -31,7 +31,7 @@ void Creature::update(std::unordered_map<int64_t, Chunk>& world,
 }
 
 void Creature::updateMood(){
-	mood.happiness += meal.evaluate()*FoodLove;
+	mood.happiness += meal.evaluate()*dna.find("foodLove")->value;
 
 	mood.clamp();
 	meal.clamp();

@@ -40,25 +40,42 @@ struct Meals{
 	}
 };
 
+struct Gene{
+	std::string name="EMPTY";
+	float value=0.0f;
+	float desiredValue=0.0f;
+
+	operator float() const {return value;};
+};
+
+struct DNA {
+	std::unordered_map<std::string, Gene> genes;
+
+	Gene* find(const std::string& name) {
+		auto it = genes.find(name);
+		return it != genes.end() ? &it->second : nullptr;
+	}
+
+	float fitness() const {
+		float fitness = 0;
+		for (auto& [name, gene] : genes) {
+			fitness += std::abs(gene.desiredValue - gene.value);
+		}
+		return fitness;
+	}
+
+	void add(Gene gene){
+		genes.insert({gene.name, gene});
+	}
+};
+
+
 class Creature{
 	public:
-		Pos pos;
-		Cell cell;
-
-		std::vector<Pos> path;
-		Mood mood;
-		Meals meal;
-		
-		int id;
-
 		Creature(Pos pos,std::unordered_map<int64_t,Chunk>& world,
 				int id=0):pos(pos), id(id){
-			
-			cell.fg.row=2; cell.fg.column=id; cell.fg.state=true;
-			cell.bg.row=0; cell.bg.column=0; cell.bg.state=true;
-
-			bool search = true;
 			Pos goal;
+			bool search = true;
 			while (search){
 				goal.x = RandomPos(rng);
 				goal.y = RandomPos(rng);
@@ -68,7 +85,9 @@ class Creature{
 				}
 			}
 			std::cout << goal.x << " - " << goal.y << std::endl;
-			path = astar(pos, goal, world);	
+			path = astar(pos, goal, world);
+
+
 		}
 
 		void update(std::unordered_map<int64_t, Chunk>& world,
@@ -76,7 +95,33 @@ class Creature{
 
 		void updateMood();
 
-	private:
-		float FoodLove=0.1;	// How much the food effects the mood
+	protected:
 		bool alive=true;
+		Pos pos;
+		Cell cell{};
+
+		std::vector<Pos> path;
+		Mood mood;
+		Meals meal;
+
+		int id;
+
+		DNA dna;
+};
+
+class Human : public Creature{
+	public:
+		Human(Pos pos,std::unordered_map<int64_t,Chunk>& world,int id)
+			:Creature(pos, world, id){
+				//constructor unique to this specific creature
+
+				//Modify the Genes from the parent creature class so all the parent DNA
+				//functions work when they will be implemented
+
+				dna.add({"foodLove", std::uniform_real_distribution<float>(0.01f, 0.5f)(rng), 0.01});
+				dna.add({"sight", std::uniform_real_distribution<float>(3.0f, 15.0f)(rng), 15.0f});
+
+				cell.fg.row=2; cell.fg.column=id; cell.fg.state=true;
+				cell.bg.row=0; cell.bg.column=0; cell.bg.state=true;
+		}
 };
