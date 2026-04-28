@@ -5,6 +5,7 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
+#include <algorithm>
 
 constexpr int chunkW = 32;
 constexpr int chunkH = 32;

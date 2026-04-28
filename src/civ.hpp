@@ -6,10 +6,12 @@
 
 class Civ{
 	public:
-		std::vector <Creature*> creatures;	
+		int id = 0;
+		std::vector <Creature*> creatures;
 		Pos location;
-	
-		Civ(){};	
+
+		Civ(){};
 		void update(std::unordered_map<int64_t, Chunk>& world);
 		void clear();
+		void evolve(std::unordered_map<int64_t, Chunk>& world);
 };

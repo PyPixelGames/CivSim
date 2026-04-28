@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <iostream>
 
+
 void Creature::update(std::unordered_map<int64_t, Chunk>& world,
 		std::vector<Creature*> creatures){
 	if (!alive) return;

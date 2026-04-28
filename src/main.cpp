@@ -78,9 +78,10 @@ int main() {
 
 	Civ testCiv;
 
-	for (size_t i=0; i<2; i++){
-		Human* c = new Human({0, 0}, world, i);
+	for (int i=0; i<2; i++){
+		Human* c = new Human({0, i}, world, testCiv.id);
 		testCiv.creatures.push_back(c);
+		testCiv.id++;
 	}
 
 	Uint64 lastTime = SDL_GetTicks();
@@ -107,11 +108,19 @@ int main() {
 			if (event.type == SDL_EVENT_QUIT) {
 				running = false;
 			}
-			if (event.type == SDL_EVENT_KEY_DOWN) {
-				if (event.key.key == SDLK_ESCAPE) running = false;
-			}
 			if (event.type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED) {
 				SDL_GetRenderOutputSize(renderer, &width, &height);
+			}
+			if (event.type == SDL_EVENT_KEY_DOWN) {
+				if (event.key.key == SDLK_ESCAPE) running = false;
+				if (event.key.key == SDLK_T){
+					for (auto creature : testCiv.creatures){
+						std::cout << "Id: " << creature->id << "   Fitness: "
+							<< creature->dna.fitness() << std::endl;
+					}
+					testCiv.evolve(world);
+					std::cout << "----" << std::endl;
+				}
 			}
 		}
 

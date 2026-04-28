@@ -57,71 +57,110 @@ struct DNA {
 	}
 
 	float fitness() const {
-		float fitness = 0;
+		float diff = 0;
 		for (auto& [name, gene] : genes) {
-			fitness += std::abs(gene.desiredValue - gene.value);
+			diff += std::abs(gene.desiredValue - gene.value);
 		}
-		return fitness;
+		return 1.0f / (1.0f + diff);
 	}
 
 	void add(Gene gene){
 		genes.insert({gene.name, gene});
 	}
+
+	bool operator==(const DNA& other) const{
+		for (auto& [name, gene] : other.genes){
+			if (genes.count(name) == 0){
+				return false;
+			}
+		}
+		return genes.size()==other.genes.size();
+	}
+
+	DNA crossover(const DNA& other) const{
+		DNA result;
+
+		if (!(*this==other)) {
+			throw std::invalid_argument("Genes are not the same");
+		}
+
+		for (auto& [name, gene] : other.genes){
+			int coinflip = std::uniform_int_distribution<int>(0, 1)(rng);
+			std::cout << "Coinflip:  " << coinflip << std::endl;
+
+			if (coinflip==0){
+				result.add(genes.at(name));
+			}else{
+				result.add(other.genes.at(name));
+			}
+		}
+
+		return result;
+	}
 };
 
 
-class Creature{
+class Creature {
 	public:
-		Creature(Pos pos,std::unordered_map<int64_t,Chunk>& world,
-				int id=0):pos(pos), id(id){
-			Pos goal;
-			bool search = true;
-			while (search){
-				goal.x = RandomPos(rng);
-				goal.y = RandomPos(rng);
-				Cell c = checkCell(world, goal);
-				if (c.bg.column != Water && c.fg.state!=true){
-					break;
-				}
-			}
-			std::cout << goal.x << " - " << goal.y << std::endl;
-			path = astar(pos, goal, world);
-
-
-		}
-
-		void update(std::unordered_map<int64_t, Chunk>& world,
-				std::vector <Creature*> creatures);
-
-		void updateMood();
-
-	protected:
+		DNA dna;
+		int id;
+		int age=0;
+		int maxAge=100;
 		bool alive=true;
 		Pos pos;
 		Cell cell{};
+
+		Pos goal;
 
 		std::vector<Pos> path;
 		Mood mood;
 		Meals meal;
 
-		int id;
+		Creature(Pos pos,std::unordered_map<int64_t,Chunk>& world,
+				int id=0):pos(pos), id(id){
+		}
 
-		DNA dna;
+		virtual Creature* spawn(Pos pos, std::unordered_map<int64_t, Chunk>& world, int id) const = 0;
+		void update(std::unordered_map<int64_t, Chunk>& world,
+				std::vector <Creature*> creatures);
+
+		void updateMood();
+		virtual ~Creature() = default;
 };
 
-class Human : public Creature{
+template<typename Derived>
+class CreatureBase : public Creature {
+public:
+    CreatureBase(Pos pos, std::unordered_map<int64_t, Chunk>& world, int id)
+        : Creature(pos, world, id) {}
+
+    Creature* spawn(Pos pos, std::unordered_map<int64_t, Chunk>& world, int id) const override {
+        return new Derived(pos, world, id);
+    }
+};
+
+
+class Human : public CreatureBase<Human>{
 	public:
 		Human(Pos pos,std::unordered_map<int64_t,Chunk>& world,int id)
-			:Creature(pos, world, id){
-				//constructor unique to this specific creature
-
-				//Modify the Genes from the parent creature class so all the parent DNA
-				//functions work when they will be implemented
-
+			:CreatureBase(pos, world, id){
 				dna.add({"foodLove", std::uniform_real_distribution<float>(0.01f, 0.5f)(rng), 0.01});
 				dna.add({"sight", std::uniform_real_distribution<float>(3.0f, 15.0f)(rng), 15.0f});
 
 				cell.fg.row=2; cell.fg.column=id; cell.fg.state=true;
 				cell.bg.row=0; cell.bg.column=0; cell.bg.state=true;
-		}
+				changeCell(world, pos, cell, false);
+
+				//bool search = false;
+				//while (search){
+				//goal.x = RandomPos(rng);
+				//goal.y = RandomPos(rng);
+				//Cell c = checkCell(world, goal);
+				//if (c.bg.column != Water && c.fg.state!=true){
+				//break;
+				//}
+				//}
+				//std::cout << goal.x << " - " << goal.y << std::endl;
+				//path = astar(pos, goal, world);
+			}
 };
