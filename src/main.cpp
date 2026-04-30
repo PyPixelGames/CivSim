@@ -9,6 +9,7 @@
 #include "civ.hpp"
 
 using namespace TextColor;
+std::mt19937 rng(std::random_device{}());
 
 int main() {
 	if (!SDL_Init(SDL_INIT_VIDEO)) {

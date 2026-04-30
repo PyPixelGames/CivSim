@@ -4,8 +4,6 @@
 #include <cstdint>
 #include <random>
 
-static std::mt19937 rng(std::random_device{}());
-
 int64_t getKey(int cx, int cy);
 
 Chunk makeChunk();

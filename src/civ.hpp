@@ -7,6 +7,7 @@
 class Civ{
 	public:
 		int id = 0;
+		std::vector <Creature*> pending;
 		std::vector <Creature*> creatures;
 		Pos location;
 

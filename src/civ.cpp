@@ -6,6 +6,11 @@ void Civ::update(std::unordered_map<int64_t, Chunk>& world){
 		Creature *c = creatures[i];
 		c->update(world, creatures);
 	}
+
+	for (auto p: pending){
+		creatures.push_back(p);
+	}
+	pending.clear();
 }
 
 void Civ::clear(){
@@ -36,7 +41,7 @@ void Civ::evolve(std::unordered_map<int64_t, Chunk>& world){
 	c->parents.push_back(scored[0].second);
 	c->parents.push_back(scored[1].second);
 
-	this->creatures.push_back(c);
+	this->pending.push_back(c);
 	this->id++;
 
 	c->debug();

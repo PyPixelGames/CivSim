@@ -154,7 +154,7 @@ class Creature {
 
 		void updateMood();
 
-		void pathFind(std::unordered_map<int64_t, Chunk>& world,Pos pos={-1, -1});
+		void pathFind(std::unordered_map<int64_t, Chunk>& world,Pos targetPos={-1, -1});
 
 		void debug(){
 			std::cout << cyan << "--- ID: " << id << " ---" << reset << std::endl;
@@ -195,5 +195,7 @@ class Human : public CreatureBase<Human>{
 				cell.fg.row=2; cell.fg.column=id; cell.fg.state=true;
 				cell.bg.row=0; cell.bg.column=0; cell.bg.state=true;
 				changeCell(world, pos, cell, false);
+
+				pathFind(world);
 			}
 };

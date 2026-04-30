@@ -146,18 +146,19 @@ void updateVisibleChunks(std::unordered_map<int64_t, Chunk>& world, SDL_Renderer
     }
 }
 
-void changeCell(std::unordered_map<int64_t, Chunk>& world,Pos p,Cell c,bool restore){
-	ChunkCoord coords = toChunk(p.x, p.y);
-	Chunk& chunk = world[getKey(coords.cx, coords.cy)];
-	EditCell cell;
-	cell.x = coords.lx;
-	cell.y = coords.ly;
-	if (restore){
-		cell.c = chunk.ogC[coords.ly * chunkW + coords.lx];
-	} else {
-		cell.c = c;
-	}
-	chunk.cells.push_back(cell);
+void changeCell(std::unordered_map<int64_t, Chunk>& world, Pos p, Cell c, bool restore){
+    ChunkCoord coords = toChunk(p.x, p.y);
+    int64_t key = getKey(coords.cx, coords.cy);
+    
+    auto it = world.find(key);
+    if (it == world.end()) return;
+    
+    Chunk& chunk = it->second;
+    EditCell cell;
+    cell.x = coords.lx;
+    cell.y = coords.ly;
+    cell.c = restore ? chunk.ogC[coords.ly * chunkW + coords.lx] : c;
+    chunk.cells.push_back(cell);
 }
 
 Cell checkCell(std::unordered_map<int64_t, Chunk>& world, Pos p){

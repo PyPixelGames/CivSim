@@ -20,4 +20,4 @@ struct Node {
 };
 
 std::vector<Pos> astar(Pos start, Pos goal, std::unordered_map<int64_t, Chunk>& world,
-		float skipCheck=false);
+                        float skipChecks=false,int maxNodes=2000);

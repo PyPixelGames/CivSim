@@ -6,6 +6,9 @@
 #include <unordered_map>
 #include <string>
 #include <algorithm>
+#include <random>
+
+extern std::mt19937 rng;
 
 constexpr int chunkW = 32;
 constexpr int chunkH = 32;
@@ -91,19 +94,13 @@ struct Chunk {
 struct ChunkCoord { int cx, cy, lx, ly, idx; };
 
 struct Pos {
-	int x, y;
+	int x=0, y=0;
 
 	bool operator==(const Pos& other) const {
 		return x == other.x && y == other.y;
 	}
 
-	int distance(Pos& other) {
-		int output = ((x-other.x)+(y-other.y))/2;
-
-		if (output>0){
-			return output;
-		}else{
-			return output*-1;
-		}
+	int distance(const Pos& other) const {
+		return std::abs(x - other.x) + std::abs(y - other.y);
 	}
 };
