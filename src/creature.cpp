@@ -6,7 +6,7 @@
 
 void Creature::update(std::unordered_map<int64_t, Chunk>& world,
 		std::vector<Creature*> creatures){
-	if (!alive) return;
+	if (!alive){changeCell(world, pos, {-1, -1}, true); return;} //restore
 	if (path.size()>0){
 		Pos nextPos = path.front();
 		Cell p = checkCell(world, nextPos);

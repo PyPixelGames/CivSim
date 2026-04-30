@@ -8,6 +8,7 @@ void Civ::update(std::unordered_map<int64_t, Chunk>& world){
 	}
 
 	for (auto p: pending){
+		p->init(world);
 		creatures.push_back(p);
 	}
 	pending.clear();
@@ -33,7 +34,7 @@ void Civ::evolve(std::unordered_map<int64_t, Chunk>& world){
 		});
 
 	DNA newDNA = scored[0].second->dna.crossover(scored[1].second->dna);
-	Creature* c = scored[0].second->spawn({0, this->id}, world, this->id);
+	Creature* c = scored[0].second->spawn({0, 0}, world, this->id);
 
 	newDNA.mutate();
 
@@ -45,4 +46,30 @@ void Civ::evolve(std::unordered_map<int64_t, Chunk>& world){
 	this->id++;
 
 	c->debug();
+}
+
+void Civ::printStats(){
+	auto it = std::max_element(creatures.begin(), creatures.end(),[](Creature* a, Creature* b) {
+        return a->dna.fitness() < b->dna.fitness();
+    });
+	Creature* best = (it != creatures.end()) ? *it : nullptr;
+
+	auto it2 = std::find_if(creatures.begin(), creatures.end(),[](Creature* c) {
+        return c->id == 0;
+    });
+	Creature* first = (it2 != creatures.end()) ? *it2 : nullptr;
+
+	std::cout << std::endl;
+	std::cout << cyan << bold << "--- STATS ---" << reset << std::endl;
+	std::cout << yellow << "ID 0 fitness: " << blue << first->dna.fitness() << reset << std::endl;
+	std::cout << std::endl;
+
+	std::cout << yellow << "Best: "<< reset << std::endl;
+	std::cout << std::endl;
+	best->debug();
+
+	std::cout << green << "Improvement: " << blue <<
+		best->dna.fitness()-first->dna.fitness() << reset << std::endl;
+	std::cout << cyan << bold << "-------------" << reset << std::endl;
+	std::cout << std::endl;
 }

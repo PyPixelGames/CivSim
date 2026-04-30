@@ -116,28 +116,41 @@ ChunkCoord toChunk(int x, int y){
 
 
 void updateVisibleChunks(std::unordered_map<int64_t, Chunk>& world, SDL_Renderer* renderer,
-		SDL_Texture* atlas,int minCX,int maxCX,int minCY,int maxCY,int bakeSize) {
-    // Bake newly visible chunks
+                        SDL_Texture* atlas, int minCX, int maxCX, int minCY, int maxCY, int bakeSize) {
+
     for (int cy = minCY; cy <= maxCY; cy++) {
         for (int cx = minCX; cx <= maxCX; cx++) {
             int64_t key = getKey(cx, cy);
             auto it = world.find(key);
-            if (it == world.end()) continue;
-
-            Chunk& chunk = it->second;
-            if (!chunk.tex) {
-                chunk.tex = chunkTex(renderer, chunk, bakeSize, atlas);
+            if (it != world.end()) {
+                Chunk& chunk = it->second;
+                if (!chunk.tex) {
+                    chunk.tex = chunkTex(renderer, chunk, bakeSize, atlas);
+                }
             }
         }
     }
 
-    // Unload distant chunks (small margin so we don't blink on chunk borders)
+    std::vector<int64_t> allKeys;
+    allKeys.reserve(world.size());
+    for (auto const& [key, _] : world) {
+        allKeys.push_back(key);
+    }
+
     const int unloadMargin = 3;
-    for (auto& [key, chunk] : world) {
+    for (int64_t key : allKeys) {
+        // Re-verify the key exists because pathfinding might have deleted it
+        // (though unlikely in your current setup, it's safe practice)
+        auto it = world.find(key);
+        if (it == world.end()) continue;
+
         int cx = (int)(key >> 32);
-        int cy = (int)(uint32_t(key));
+        int cy = (int)(key & 0xFFFFFFFF); // Use bitmask for safety
+
         if (cx < minCX - unloadMargin || cx > maxCX + unloadMargin ||
             cy < minCY - unloadMargin || cy > maxCY + unloadMargin) {
+
+            Chunk& chunk = it->second;
             if (chunk.tex) {
                 SDL_DestroyTexture(chunk.tex);
                 chunk.tex = nullptr;
@@ -149,10 +162,10 @@ void updateVisibleChunks(std::unordered_map<int64_t, Chunk>& world, SDL_Renderer
 void changeCell(std::unordered_map<int64_t, Chunk>& world, Pos p, Cell c, bool restore){
     ChunkCoord coords = toChunk(p.x, p.y);
     int64_t key = getKey(coords.cx, coords.cy);
-    
+
     auto it = world.find(key);
     if (it == world.end()) return;
-    
+
     Chunk& chunk = it->second;
     EditCell cell;
     cell.x = coords.lx;

@@ -81,7 +81,7 @@ int main() {
 
 	for (int i=0; i<2; i++){
 		Human* c = new Human({0, i}, world, testCiv.id);
-		testCiv.creatures.push_back(c);
+		testCiv.pending.push_back(c);
 		testCiv.id++;
 	}
 
@@ -119,6 +119,9 @@ int main() {
 						creature->debug();
 					}
 					testCiv.evolve(world);
+				}
+				if (event.key.key == SDLK_Y){
+					testCiv.printStats();
 				}
 			}
 		}

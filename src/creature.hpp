@@ -51,65 +51,67 @@ struct DNA {
 	std::unordered_map<std::string, Gene> genes;
 	std::pair<std::string, float> lastMutation = {"/", 0.0};
 
+	mutable float cachedFitness = 0.0f;
+	mutable bool dirty = true;
+
 	Gene* find(const std::string& name) {
 		auto it = genes.find(name);
 		return it != genes.end() ? &it->second : nullptr;
 	}
 
 	float fitness() const {
+		if (!dirty) return cachedFitness;
+
 		float diff = 0;
-		for (auto& [name, gene] : genes) {
+		for (const auto& [name, gene] : genes) {
 			diff += std::abs(gene.desiredValue - gene.value);
 		}
-		return 1.0f / (1.0f + diff);
+
+		cachedFitness = 1.0f / (1.0f + diff);
+		dirty = false;
+		return cachedFitness;
 	}
 
-	void add(Gene gene){
+	void add(Gene gene) {
 		genes.insert({gene.name, gene});
+		dirty = true; // Mark for recalculation
 	}
 
-	bool operator==(const DNA& other) const{
-		for (auto& [name, gene] : other.genes){
-			if (genes.count(name) == 0){
-				return false;
-			}
+	bool operator==(const DNA& other) const {
+		if (genes.size() != other.genes.size()) return false;
+		for (const auto& [name, gene] : other.genes) {
+			if (genes.find(name) == genes.end()) return false;
 		}
-		return genes.size()==other.genes.size();
+		return true;
 	}
 
-	DNA crossover(const DNA& other) const{
+	DNA crossover(const DNA& other) const {
 		DNA result;
-
-		if (!(*this==other)) {
+		// Optimization: checking size first is faster than full comparison
+		if (genes.size() != other.genes.size()) {
 			throw std::invalid_argument("Genes are not the same");
 		}
 
-		for (auto& [name, gene] : other.genes){
+		for (const auto& [name, gene] : genes) {
 			int coinflip = std::uniform_int_distribution<int>(0, 1)(rng);
-
-			if (coinflip==0){
-				result.add(genes.at(name));
-			}else{
-				result.add(other.genes.at(name));
-			}
+			result.add(coinflip == 0 ? gene : other.genes.at(name));
 		}
-
 		return result;
 	}
 
-	void mutate(){
-		// Build key vector
+	void mutate() {
 		std::vector<std::string> keys;
 		keys.reserve(genes.size());
-		for (auto& [k, v] : genes) keys.push_back(k);
+		for (const auto& [k, v] : genes) keys.push_back(k);
 
 		int index = std::uniform_int_distribution<size_t>(0, keys.size() - 1)(rng);
-		auto& gene = genes[keys[index]];
+		const std::string& targetKey = keys[index];
 
 		float mutation = std::uniform_real_distribution<float>(-0.1, 0.1)(rng);
-		genes[keys[index]].value+=mutation;
+		genes[targetKey].value += mutation;
 
-		lastMutation = {genes[keys[index]].name, mutation};
+		lastMutation = {targetKey, mutation};
+		dirty = true;
 	}
 
 	void debug(){
@@ -149,6 +151,7 @@ class Creature {
 		}
 
 		virtual Creature* spawn(Pos pos, std::unordered_map<int64_t, Chunk>& world, int id) const = 0;
+		virtual void init(std::unordered_map<int64_t, Chunk>& world){};
 		void update(std::unordered_map<int64_t, Chunk>& world,
 				std::vector <Creature*> creatures);
 
@@ -173,13 +176,13 @@ class Creature {
 
 template<typename Derived>
 class CreatureBase : public Creature {
-public:
-    CreatureBase(Pos pos, std::unordered_map<int64_t, Chunk>& world, int id)
-        : Creature(pos, world, id) {}
+	public:
+		CreatureBase(Pos pos, std::unordered_map<int64_t, Chunk>& world, int id)
+			: Creature(pos, world, id) {}
 
-    Creature* spawn(Pos pos, std::unordered_map<int64_t, Chunk>& world, int id) const override {
-        return new Derived(pos, world, id);
-    }
+		Creature* spawn(Pos pos, std::unordered_map<int64_t, Chunk>& world, int id) const override {
+			return new Derived(pos, world, id);
+		}
 };
 
 
@@ -191,11 +194,12 @@ class Human : public CreatureBase<Human>{
 				dna.add({"sight", std::uniform_real_distribution<float>(3.0f, 10.0f)(rng), 15.0f});
 				dna.add({"agility", std::uniform_real_distribution<float>(1.0f, 3.0f)(rng), 5.0f});
 				dna.add({"iq", std::uniform_real_distribution<float>(30.0f, 50.0f)(rng), 100.0f});
-
-				cell.fg.row=2; cell.fg.column=id; cell.fg.state=true;
-				cell.bg.row=0; cell.bg.column=0; cell.bg.state=true;
-				changeCell(world, pos, cell, false);
-
-				pathFind(world);
 			}
+		void init(std::unordered_map<int64_t, Chunk>& world) override {
+			cell.fg.row=2; cell.fg.column=id; cell.fg.state=true;
+			cell.bg.row=0; cell.bg.column=0; cell.bg.state=true;
+			changeCell(world, pos, cell, false);
+
+			pathFind(world);
+		}
 };

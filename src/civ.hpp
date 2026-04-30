@@ -15,4 +15,5 @@ class Civ{
 		void update(std::unordered_map<int64_t, Chunk>& world);
 		void clear();
 		void evolve(std::unordered_map<int64_t, Chunk>& world);
+		void printStats();
 };
