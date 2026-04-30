@@ -32,7 +32,7 @@ float checkHeightValue(Pos pos, float heightmap[]){
 	return heightmap[(pos.y)*levelSizeX+(pos.x)];
 }
 
-void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* renderer,int s, SDL_Texture* atlas) {	
+void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* renderer,int s, SDL_Texture* atlas) {
 	float varX = dist(rng);
 	float varY = dist(rng);
 
@@ -72,9 +72,9 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 			Cell type{-1, -1};
 
 
-			// Biome generation	
+			// Biome generation
 			float biomeValue = biomeNoise.GetNoise((float)(tx + biomeVarX),(float)(ty + biomeVarY));
-			biomeValue = (biomeValue + 1.0f) / 2.0f; 
+			biomeValue = (biomeValue + 1.0f) / 2.0f;
 
 			if (biomeValue >= 0.605f){
 				type.bg.row = SNOWY;
@@ -172,7 +172,7 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 				}
 
 				if (lowestValue.first != lastNeighbour.first){
-					std::vector<Pos> tempPath = astar(lastNeighbour.second,lowestValue.second, 
+					std::vector<Pos> tempPath = astar(lastNeighbour.second,lowestValue.second,
 						world, true);
 					bool state=false;
 					for (auto p: tempPath){
@@ -216,7 +216,7 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 				float t = (float)i / (float)(length - 1);
 
 				// Taper from full riverWidth down to 1 at the mouth
-				int currentWidth = std::max(1, (int)std::round(riverWidth * t));	
+				int currentWidth = std::max(1, (int)std::round(riverWidth * t));
 
 				for (int dy = -currentWidth; dy <= currentWidth; dy++) {
 					for (int dx = -currentWidth; dx <= currentWidth; dx++) {
@@ -279,4 +279,5 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 
 	std::cout << "rivers stuck: " << riversStuck << std::endl;
 	std::cout << "rivers small: " << riversSmall << std::endl;
+	std::cout << std::endl;
 }

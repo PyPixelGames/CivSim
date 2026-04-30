@@ -2,8 +2,7 @@
 #include <random>
 #include "pathFinding.hpp"
 
-using namespace Colors;
-
+using namespace TextColor;
 static std::uniform_int_distribution<int> RandomPos(1, 50);
 
 struct Mood {
@@ -50,6 +49,7 @@ struct Gene{
 
 struct DNA {
 	std::unordered_map<std::string, Gene> genes;
+	std::pair<std::string, float> lastMutation = {"/", 0.0};
 
 	Gene* find(const std::string& name) {
 		auto it = genes.find(name);
@@ -86,7 +86,6 @@ struct DNA {
 
 		for (auto& [name, gene] : other.genes){
 			int coinflip = std::uniform_int_distribution<int>(0, 1)(rng);
-			std::cout << "Coinflip:  " << coinflip << std::endl;
 
 			if (coinflip==0){
 				result.add(genes.at(name));
@@ -96,6 +95,33 @@ struct DNA {
 		}
 
 		return result;
+	}
+
+	void mutate(){
+		// Build key vector
+		std::vector<std::string> keys;
+		keys.reserve(genes.size());
+		for (auto& [k, v] : genes) keys.push_back(k);
+
+		int index = std::uniform_int_distribution<size_t>(0, keys.size() - 1)(rng);
+		auto& gene = genes[keys[index]];
+
+		float mutation = std::uniform_real_distribution<float>(-0.1, 0.1)(rng);
+		genes[keys[index]].value+=mutation;
+
+		lastMutation = {genes[keys[index]].name, mutation};
+	}
+
+	void debug(){
+		std::cout << green << "Fitness: " << blue << fitness() << reset << std::endl;
+		if (lastMutation.first != "/"){
+			std::cout << green << "Last mutation: " << darkRed << lastMutation.first << reset
+				<< " was added " << blue << lastMutation.second << reset << std::endl;
+		}
+		std::cout << std::endl;
+		for (auto& [name, gene] : genes){
+			std::cout << darkRed << name << ": " << blue << gene << reset << std::endl;
+		}
 	}
 };
 
@@ -116,6 +142,8 @@ class Creature {
 		Mood mood;
 		Meals meal;
 
+		std::vector<Creature*> parents={};
+
 		Creature(Pos pos,std::unordered_map<int64_t,Chunk>& world,
 				int id=0):pos(pos), id(id){
 		}
@@ -125,6 +153,21 @@ class Creature {
 				std::vector <Creature*> creatures);
 
 		void updateMood();
+
+		void pathFind(std::unordered_map<int64_t, Chunk>& world,Pos pos={-1, -1});
+
+		void debug(){
+			std::cout << cyan << "--- ID: " << id << " ---" << reset << std::endl;
+			if (parents.size()){
+				std::cout << magenta << "Parent ID's: " << parents[0]->id
+					<< " | "<<parents[1]->id << reset << std::endl;
+				std::cout << std::endl;
+			}
+			dna.debug();
+			std::cout << cyan << "--------" << reset << std::endl;
+			std::cout << std::endl;
+		}
+
 		virtual ~Creature() = default;
 };
 
@@ -145,22 +188,12 @@ class Human : public CreatureBase<Human>{
 		Human(Pos pos,std::unordered_map<int64_t,Chunk>& world,int id)
 			:CreatureBase(pos, world, id){
 				dna.add({"foodLove", std::uniform_real_distribution<float>(0.01f, 0.5f)(rng), 0.01});
-				dna.add({"sight", std::uniform_real_distribution<float>(3.0f, 15.0f)(rng), 15.0f});
+				dna.add({"sight", std::uniform_real_distribution<float>(3.0f, 10.0f)(rng), 15.0f});
+				dna.add({"agility", std::uniform_real_distribution<float>(1.0f, 3.0f)(rng), 5.0f});
+				dna.add({"iq", std::uniform_real_distribution<float>(30.0f, 50.0f)(rng), 100.0f});
 
 				cell.fg.row=2; cell.fg.column=id; cell.fg.state=true;
 				cell.bg.row=0; cell.bg.column=0; cell.bg.state=true;
 				changeCell(world, pos, cell, false);
-
-				//bool search = false;
-				//while (search){
-				//goal.x = RandomPos(rng);
-				//goal.y = RandomPos(rng);
-				//Cell c = checkCell(world, goal);
-				//if (c.bg.column != Water && c.fg.state!=true){
-				//break;
-				//}
-				//}
-				//std::cout << goal.x << " - " << goal.y << std::endl;
-				//path = astar(pos, goal, world);
 			}
 };

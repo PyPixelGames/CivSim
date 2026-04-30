@@ -96,7 +96,7 @@ void drawFPS(SDL_Renderer* renderer, GameFont& font, float fps, int x, int y) {
     std::string text = "FPS: " + std::to_string((int)fps);
     if (text != font.lastFpsText) {
         if (font.fpsTex) SDL_DestroyTexture(font.fpsTex);
-        SDL_Surface* surf = TTF_RenderText_Blended(font.ttf, text.c_str(), 0, Colors::BLACK);
+        SDL_Surface* surf = TTF_RenderText_Blended(font.ttf, text.c_str(), 0, {0, 0, 0, 255});
         if (!surf) return;
         font.fpsTex = SDL_CreateTextureFromSurface(renderer, surf);
         SDL_DestroySurface(surf);

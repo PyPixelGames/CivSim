@@ -1,7 +1,1 @@
-Evolution:
-
-	I need genes that correspond to abilities
-	Parents should be chosen by the fitness as presentage
-	Reproduction should be made with crossover with a random center point
-	apply random mutation (Should the ability to mutate more also be a genetick skill? could be interesting)
-	I should probably add age so that the new generation can replace the previous one.
+ADD MUTATION!!!!!

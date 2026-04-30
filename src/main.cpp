@@ -8,7 +8,7 @@
 #include "levelGeneration.hpp"
 #include "civ.hpp"
 
-using namespace Colors;
+using namespace TextColor;
 
 int main() {
 	if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -64,10 +64,10 @@ int main() {
 	}
 
 	populateChunks(world, 100, 100, bakeSize);
-	std::cout << "population complete\n";
+	std::cout << "population complete" << std::endl;
 
 	generateLevel(world, renderer, bakeSize, atlas);
-	std::cout << "generation complete\n";
+	std::cout << "generation complete" << std::endl;
 
 	Uint64 fpsTimer = SDL_GetTicks();
 	int frameCount = 0;
@@ -115,11 +115,9 @@ int main() {
 				if (event.key.key == SDLK_ESCAPE) running = false;
 				if (event.key.key == SDLK_T){
 					for (auto creature : testCiv.creatures){
-						std::cout << "Id: " << creature->id << "   Fitness: "
-							<< creature->dna.fitness() << std::endl;
+						creature->debug();
 					}
 					testCiv.evolve(world);
-					std::cout << "----" << std::endl;
 				}
 			}
 		}
@@ -232,6 +230,6 @@ int main() {
 	SDL_Quit();
 	testCiv.clear();
 
-	std::cout << "unloaded\n";
+	std::cout << bold << "unloaded" << reset << std::endl;
 	return 0;
 }

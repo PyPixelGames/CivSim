@@ -16,17 +16,18 @@ inline float stride = bakeSize-gapSize;
 
 constexpr SDL_Color bg = {25, 25, 25, 255};
 
-namespace Colors {
-	static constexpr SDL_Color WHITE = {255, 241, 232, 255};
-	static constexpr SDL_Color BLACK = {0, 0, 0, 255};
-	static constexpr SDL_Color LIGHTGRAY = {194, 195, 199, 255};
-	static constexpr SDL_Color DARKGRAY = {95, 87, 79, 255};
-	static constexpr SDL_Color DARKGREEN = {0, 135, 81, 255};
-	static constexpr SDL_Color LIME = {0, 228, 54, 255};
-	static constexpr SDL_Color YELLOW = {255, 236, 39, 255};
-	static constexpr SDL_Color DARKBLUE = {29, 43, 83, 255};
-	static constexpr SDL_Color PURPLE = {126, 37, 83, 255};
+namespace TextColor {
+    const std::string reset   = "\033[0m";
+    const std::string bold    = "\033[1m";
+    const std::string red     = "\033[31m";
+    const std::string darkRed = "\033[38;5;88m";
+    const std::string green   = "\033[32m";
+    const std::string yellow  = "\033[33m";
+    const std::string blue    = "\033[34m";
+    const std::string magenta = "\033[35m";
+    const std::string cyan    = "\033[36m";
 }
+
 
 typedef struct {
 	int name;
