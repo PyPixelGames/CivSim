@@ -7,11 +7,17 @@
 #include "helper.hpp"
 #include "levelGeneration.hpp"
 #include "civ.hpp"
+#include "logs.hpp"
 
 using namespace TextColor;
-std::mt19937 rng(std::random_device{}());
+unsigned int seed = std::random_device{}();
+std::mt19937 rng(seed);
 
 int main() {
+	TeeBuf tee("../src/logs.txt");
+    std::cout.rdbuf(&tee);
+	tee.clear();
+
 	if (!SDL_Init(SDL_INIT_VIDEO)) {
 		std::cerr << "SDL_Init failed: " << SDL_GetError() << "\n";
 		return 1;
@@ -65,10 +71,10 @@ int main() {
 	}
 
 	populateChunks(world, 100, 100, bakeSize);
-	std::cout << "population complete" << std::endl;
+	std::cout<<"----- WORLD GENERATION -----\npopulation of chunks with blanks complete\n"<<std::endl;
 
 	generateLevel(world, renderer, bakeSize, atlas);
-	std::cout << "generation complete" << std::endl;
+	std::cout << "World generation complete\n-----\n" << std::endl;
 
 	Uint64 fpsTimer = SDL_GetTicks();
 	int frameCount = 0;
@@ -115,13 +121,12 @@ int main() {
 			if (event.type == SDL_EVENT_KEY_DOWN) {
 				if (event.key.key == SDLK_ESCAPE) running = false;
 				if (event.key.key == SDLK_T){
+					tee.setMode(LogMode::ConsoleOnly);
 					for (auto creature : testCiv.creatures){
 						creature->debug();
 					}
 					testCiv.evolve(world);
-				}
-				if (event.key.key == SDLK_Y){
-					testCiv.printStats();
+					tee.setMode(LogMode::Both);
 				}
 			}
 		}
@@ -221,6 +226,8 @@ int main() {
 		SDL_RenderPresent(renderer);
 	}
 
+	testCiv.printStats();
+
 	for (auto& [key, chunk] : world)
 		if (chunk.tex) SDL_DestroyTexture(chunk.tex);
 
@@ -234,6 +241,6 @@ int main() {
 	SDL_Quit();
 	testCiv.clear();
 
-	std::cout << bold << "unloaded" << reset << std::endl;
+	std::cout << bold << "\nunloaded" << reset << std::endl;
 	return 0;
 }

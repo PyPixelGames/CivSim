@@ -22,8 +22,6 @@ void Creature::update(std::unordered_map<int64_t, Chunk>& world,
 		if (crt->id != id && id == 0){ //REMOVE id == 0, this is for testing
 			int dis = pos.distance(crt->pos);
 			if (dis < dna.find("sight")->value){
-				std::cout << "Distance: " <<  dis << "   " <<
-					" Id: " << crt->id << std::endl;
 			}
 		}
 	}
@@ -57,7 +55,6 @@ void Creature::pathFind(std::unordered_map<int64_t, Chunk>& world,Pos targetPos)
 	}else{
 		goal=targetPos;
 	}
-	std::cout << goal.x << " - " << goal.y << std::endl;
 	path = astar(this->pos, goal, world);
 
 }

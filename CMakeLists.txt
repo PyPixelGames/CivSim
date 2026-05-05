@@ -61,6 +61,7 @@ add_executable(CivSim
     src/creature.cpp
 	src/civ.cpp
 	src/pathFinding.cpp
+	src/logs.hpp
 )
 target_include_directories(CivSim PRIVATE
     ${CMAKE_SOURCE_DIR}/src

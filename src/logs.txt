@@ -1,0 +1,33 @@
+----- WORLD GENERATION -----
+population of chunks with blanks complete
+
+rivers stuck: 0
+rivers small: 0
+river count: 0
+
+World generation complete
+-----
+
+
+--- STATS ---
+ID 0 fitness: 0.0131879
+
+Best: 
+
+--- ID: 39 ---
+Parent ID's: 37 | 35
+
+Fitness: 0.0160673
+Last mutation: sight was added 0.0784592
+
+iq: 49.787
+agility: 2.56719
+sight: 6.72877
+foodLove: 0.331262
+--------
+
+Improvement: 0.00287935
+-------------
+
+
+unloaded

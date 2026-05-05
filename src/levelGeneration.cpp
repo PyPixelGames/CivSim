@@ -269,7 +269,6 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 
 			riverCount++;
 			attempts=0;
-			std::cout << riverCount << std::endl;
 		} else {
 			attempts++;
 			riversSmall++;
@@ -279,5 +278,6 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 
 	std::cout << "rivers stuck: " << riversStuck << std::endl;
 	std::cout << "rivers small: " << riversSmall << std::endl;
+	std::cout << "river count: " << riverCount << std::endl;
 	std::cout << std::endl;
 }
