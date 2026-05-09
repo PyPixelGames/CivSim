@@ -172,6 +172,12 @@ void changeCell(std::unordered_map<int64_t, Chunk>& world, Pos p, Cell c, bool r
     cell.y = coords.ly;
     cell.c = restore ? chunk.ogC[coords.ly * chunkW + coords.lx] : c;
     chunk.cells.push_back(cell);
+
+	Cell oldCell = chunk.c[coords.ly * chunkW + coords.lx];
+	if (--chunk.cellCount[oldCell] == 0){
+		chunk.cellCount.erase(oldCell);
+	}
+	chunk.cellCount[cell.c]++;
 }
 
 Cell checkCell(std::unordered_map<int64_t, Chunk>& world, Pos p){

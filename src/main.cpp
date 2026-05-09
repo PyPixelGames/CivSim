@@ -121,12 +121,7 @@ int main() {
 			if (event.type == SDL_EVENT_KEY_DOWN) {
 				if (event.key.key == SDLK_ESCAPE) running = false;
 				if (event.key.key == SDLK_T){
-					tee.setMode(LogMode::ConsoleOnly);
-					for (auto creature : testCiv.creatures){
-						creature->debug();
-					}
 					testCiv.evolve(world);
-					tee.setMode(LogMode::Both);
 				}
 			}
 		}

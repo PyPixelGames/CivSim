@@ -157,7 +157,11 @@ class Creature {
 
 		void updateMood();
 
+		void updatePosition(std::unordered_map<int64_t, Chunk>& world,Pos newPos);
+
 		void pathFind(std::unordered_map<int64_t, Chunk>& world,Pos targetPos={-1, -1});
+
+		Pos lookFor(std::unordered_map<int64_t, Chunk>& world,Cell target);
 
 		void debug(){
 			std::cout << cyan << "--- ID: " << id << " ---" << reset << std::endl;
@@ -196,8 +200,14 @@ class Human : public CreatureBase<Human>{
 				dna.add({"iq", std::uniform_real_distribution<float>(30.0f, 50.0f)(rng), 100.0f});
 			}
 		void init(std::unordered_map<int64_t, Chunk>& world) override {
-			cell.fg.row=2; cell.fg.column=id; cell.fg.state=true;
-			cell.bg.row=0; cell.bg.column=0; cell.bg.state=true;
+			cell.fg.row=2;
+			cell.fg.column=std::uniform_int_distribution<int>(0, 5)(rng);
+			cell.fg.state=true;
+
+			cell.bg.row=0;
+			cell.bg.column=0;
+			cell.bg.state=true;
+
 			changeCell(world, pos, cell, false);
 
 			pathFind(world);

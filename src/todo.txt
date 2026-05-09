@@ -1,1 +1,1 @@
-ADD MUTATION!!!!!
+make world an extern variable

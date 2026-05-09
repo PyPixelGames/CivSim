@@ -44,9 +44,18 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 	terNoise.SetFractalLacunarity(2.0f);
 	terNoise.SetFractalGain(0.5f);
 
+	static FastNoiseLite vegNoiseClumps;
+	vegNoiseClumps.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+	vegNoiseClumps.SetFrequency(0.008f);
+	vegNoiseClumps.SetFractalType(FastNoiseLite::FractalType_FBm);
+	vegNoiseClumps.SetFractalOctaves(3);
+	float vegVarClumpsX = dist(rng);
+	float vegVarClumpsY = dist(rng);
+
+
 	static FastNoiseLite vegNoise;
 	vegNoise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
-	vegNoise.SetFrequency(0.008f);
+	vegNoise.SetFrequency(0.5f);
 	vegNoise.SetFractalType(FastNoiseLite::FractalType_FBm);
 	vegNoise.SetFractalOctaves(3);
 	float vegVarX = dist(rng);
@@ -98,21 +107,36 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 			else                     {type.bg.column= Water;}
 			type.bg.state=true;
 
+			//Apply the base
+			Chunk& chunk = world[key];
+			chunk.ogC[coords.idx] = type;
+
 
 			// Vegitation generation
+			float vegValueLowFreq = vegNoiseClumps.GetNoise((float)(tx+vegVarClumpsX),
+					(float)(ty+vegVarClumpsY));
+			vegValueLowFreq = (vegValueLowFreq + 1.0f) / 2.0f;
+
 			float vegValue = vegNoise.GetNoise((float)(tx+vegVarX), (float)(ty+vegVarY));
 			vegValue = (vegValue + 1.0f) / 2.0f;
-			if (vegValue >= 0.70f && type.bg.column== Grass && terValue<=0.5){
-				type.fg.column= Tree;
-				type.fg.row= type.bg.row;
+
+			//Bushes
+			if (vegValue <= 0.15f && type.bg.column== Grass && terValue<=0.5){
+				type.fg.column = bush;
+				type.fg.row = type.bg.row;
+				type.fg.state = true;
+			}
+
+			//Trees
+			if (vegValueLowFreq >= 0.70f && type.bg.column== Grass && terValue<=0.5){
+				type.fg.column = Tree;
+				type.fg.row = type.bg.row;
 				type.fg.state=true;
 			}
 
-
-			// Actually applying the change
-			Chunk& chunk  = world[key];
+			//Apply the rest
 			chunk.c[coords.idx] = type;
-			chunk.ogC[coords.idx] = type;
+			chunk.cellCount[type]++;
 			dirtyKeys.insert(key);
 
 			heightmap[ty * levelSizeX + tx] = terValue; // world position
@@ -227,10 +251,20 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 							int64_t key = getKey(cCoords.cx, cCoords.cy);
 							if (world.find(key) == world.end()) continue;
 							Chunk& chunk = world[key];
-							dirtyKeys.insert(key);
+
+							// decrement old
+							Cell old = chunk.c[cCoords.idx];
+							if (--chunk.cellCount[old] == 0) chunk.cellCount.erase(old);
+
 							chunk.c[cCoords.idx].bg.column = Water;
 							chunk.c[cCoords.idx].fg.state = false;
+							chunk.ogC[cCoords.idx].bg.column = Water;
+							chunk.ogC[cCoords.idx].fg.state = false;
 
+							// increment new
+							chunk.cellCount[chunk.c[cCoords.idx]]++;
+
+							dirtyKeys.insert(key);
 							carvedAdditions.push_back(wp);
 						}
 					}
@@ -260,8 +294,13 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 
 						int value = chunk.c[c.idx].bg.column;
 						if (value != Water && value != Mountain && value != MountainTop){
+							Cell old = chunk.c[c.idx];
+							if (--chunk.cellCount[old] == 0) chunk.cellCount.erase(old);
+
 							chunk.c[c.idx].bg.column = Sand;
 							chunk.c[c.idx].fg.state = false;
+
+							chunk.cellCount[chunk.c[c.idx]]++;
 						}
 					}
 				}

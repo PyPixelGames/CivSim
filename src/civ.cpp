@@ -44,8 +44,6 @@ void Civ::evolve(std::unordered_map<int64_t, Chunk>& world){
 
 	this->pending.push_back(c);
 	this->id++;
-
-	c->debug();
 }
 
 void Civ::printStats(){

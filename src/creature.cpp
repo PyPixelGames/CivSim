@@ -3,37 +3,33 @@
 #include <unordered_map>
 #include <iostream>
 
-
-void Creature::update(std::unordered_map<int64_t, Chunk>& world,
-		std::vector<Creature*> creatures){
+void Creature::update(std::unordered_map<int64_t, Chunk>& world,std::vector<Creature*> creatures){
 	if (!alive){changeCell(world, pos, {-1, -1}, true); return;} //restore
 	if (path.size()>0){
 		Pos nextPos = path.front();
-		Cell p = checkCell(world, nextPos);
-		changeCell(world, pos, {-1, -1}, true);  // restore
-		pos = nextPos;
-		changeCell(world, pos, cell, false); // place
+		updatePosition(world, nextPos);
 		path.erase(path.begin());
-	}else{
-		return;
 	}
-
-	for (auto crt : creatures){
-		if (crt->id != id && id == 0){ //REMOVE id == 0, this is for testing
-			int dis = pos.distance(crt->pos);
-			if (dis < dna.find("sight")->value){
-			}
-		}
-	}
-
 	updateMood();
 }
 
+void Creature::updatePosition(std::unordered_map<int64_t, Chunk>& world,Pos newPos){
+	Cell p = checkCell(world, newPos);
+	cell.bg = p.bg;
+	changeCell(world, pos, {-1, -1}, true);  // restore
+	pos = newPos;
+	changeCell(world, pos, cell, false); // place
+}
+
 void Creature::updateMood(){
+	meal.food-=0.01;
+
 	mood.happiness += meal.evaluate()*dna.find("foodLove")->value;
 
 	mood.clamp();
 	meal.clamp();
+
+	std::cout << id << ":  " << meal.food << std::endl;
 
 	if (meal.food<=-meal.val){
 		alive=false;
@@ -56,5 +52,28 @@ void Creature::pathFind(std::unordered_map<int64_t, Chunk>& world,Pos targetPos)
 		goal=targetPos;
 	}
 	path = astar(this->pos, goal, world);
+}
 
+Pos Creature::lookFor(std::unordered_map<int64_t, Chunk>& world,Cell target){
+	Pos closest = {-1, -1};
+
+	std::unordered_set<int64_t> visibleChunks;
+	int sight = dna.find("sight")->value;
+
+	for(int y=this->pos.y-sight; y <= this->pos.y+sight; y+=chunkH/2){
+		for(int x=this->pos.x-sight; x <= this->pos.x+sight; x+=chunkW/2){
+			if (x<0 || y<0) continue;
+
+			ChunkCoord coords = toChunk(x, y);
+			int64_t key = getKey(coords.cx, coords.cy);
+			if (world.find(key) == world.end()) return closest;
+
+			visibleChunks.insert(key);
+		}
+	}
+
+
+	//Chunk& chunk = world[key];
+
+	return closest;
 }
