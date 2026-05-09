@@ -56,6 +56,12 @@ struct AtlasPos{
 struct Cell {
 	AtlasPos fg;
 	AtlasPos bg;
+
+	bool operator==(const Cell& other){
+		return (fg.row==other.fg.row && fg.column==other.fg.column &&
+				fg.state==other.fg.state && bg.row==other.bg.row &&
+				bg.column==other.bg.column && bg.state==other.bg.state);
+	}
 };
 
 struct CellHash {

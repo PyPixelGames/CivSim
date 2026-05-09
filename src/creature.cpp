@@ -66,14 +66,36 @@ Pos Creature::lookFor(std::unordered_map<int64_t, Chunk>& world,Cell target){
 
 			ChunkCoord coords = toChunk(x, y);
 			int64_t key = getKey(coords.cx, coords.cy);
-			if (world.find(key) == world.end()) return closest;
+			if (world.find(key) == world.end()) continue;
 
 			visibleChunks.insert(key);
 		}
 	}
 
+	std::vector<Pos> possiblePositions;
+	for (const auto& key: visibleChunks){
+		Chunk& chunk = world[key];
+		if (chunk.cellCount.count(target)){
+			for (int y=0; y<chunkH; y++){
+				for (int x=0; x<chunkW; x++){
+					Cell c = chunk.c[y * chunkW + x];
+					if (c==target){
+						auto [cx, cy] = fromKey(key);
+						possiblePositions.push_back({(cx*chunkW)+x, (cy*chunkH)+y});
+					}
+				}
+			}
+		}
+	}
 
-	//Chunk& chunk = world[key];
+	int bestDist = sight;
+	for (const auto& p : possiblePositions){
+		int dist = this->pos.distance(p);
+		if (dist < bestDist){
+			bestDist = dist;
+			closest = p;
+		}
+	}
 
 	return closest;
 }

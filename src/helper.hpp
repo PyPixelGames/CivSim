@@ -6,6 +6,8 @@
 
 int64_t getKey(int cx, int cy);
 
+std::pair<int,int> fromKey(int64_t key);
+
 Chunk makeChunk();
 void populateChunks(std::unordered_map<int64_t, Chunk>& world,
 		int chunksX, int chunksY, int s);

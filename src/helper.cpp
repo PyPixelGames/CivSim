@@ -5,6 +5,12 @@ int64_t getKey(int cx, int cy) {
 	return (int64_t(cx) << 32) | int64_t(uint32_t(cy));
 }
 
+std::pair<int,int> fromKey(int64_t key){
+    int cx = int(key >> 32);
+    int cy = int(key & 0xFFFFFFFF);
+    return {cx, cy};
+}
+
 Chunk makeChunk(){
 	Chunk c;
 	c.tex = nullptr;
