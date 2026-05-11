@@ -21,9 +21,9 @@ std::vector<Pos> astar(Pos start, Pos goal, std::unordered_map<int64_t, Chunk>& 
     gScore[key(start)] = 0;
     open.push({start, 0, heuristic(start, goal)});
 
-    const int dx[]    = {-1, 0, 1,-1, 1,-1, 0, 1};
-    const int dy[]    = {-1,-1,-1, 0, 0, 1, 1, 1};
-    const float cost[]= {1.414f,1,1.414f,1,1,1.414f,1,1.414f};
+    const int dx[]     = {-1, 0, 1,-1, 1,-1, 0, 1};
+    const int dy[]     = {-1,-1,-1, 0, 0, 1, 1, 1};
+    const float cost[] = {1.414f,1,1.414f,1,1,1.414f,1,1.414f};
 
     int nodesExplored = 0;
 

@@ -17,6 +17,7 @@ int main() {
 	TeeBuf tee("../src/logs.txt");
     std::cout.rdbuf(&tee);
 	tee.clear();
+	tee.setMode(LogMode::FileOnly);
 
 	if (!SDL_Init(SDL_INIT_VIDEO)) {
 		std::cerr << "SDL_Init failed: " << SDL_GetError() << "\n";
@@ -52,6 +53,9 @@ int main() {
 	int sizeChange = 50;
 	int movingSpeed = 300;
 
+	bool updateFreze=true;
+	bool nextUpdateStep=false;
+
 	std::unordered_map<int64_t, Chunk> world;
 
 	GameFont font;
@@ -69,8 +73,9 @@ int main() {
 	if (!atlas) {
 		std::cerr << "Atlas load failed: " << SDL_GetError() << "\n";
 	}
+	std::cout << "Init fine\n" <<std::endl;
 
-	populateChunks(world, 100, 100, bakeSize);
+	populateChunks(world, 100, 100);
 	std::cout<<"----- WORLD GENERATION -----\npopulation of chunks with blanks complete\n"<<std::endl;
 
 	generateLevel(world, renderer, bakeSize, atlas);
@@ -85,7 +90,7 @@ int main() {
 
 	Civ testCiv;
 
-	for (int i=0; i<2; i++){
+	for (int i=0; i<1; i++){
 		Human* c = new Human({0, i}, world, testCiv.id);
 		testCiv.pending.push_back(c);
 		testCiv.id++;
@@ -120,8 +125,12 @@ int main() {
 			}
 			if (event.type == SDL_EVENT_KEY_DOWN) {
 				if (event.key.key == SDLK_ESCAPE) running = false;
+				if (event.key.key == SDLK_F){
+					updateFreze = !updateFreze;
+					std::cout << "Changed updatFreze to: " << updateFreze << std::endl;
+				}
 				if (event.key.key == SDLK_T){
-					testCiv.evolve(world);
+					nextUpdateStep=true;
 				}
 			}
 		}
@@ -177,9 +186,10 @@ int main() {
 		SDL_RenderClear(renderer);
 
 		updateAccumulator += deltaTime;
-		if (updateAccumulator >= updateInterval) {
-			updateAccumulator -= updateInterval;
-
+		bool updateState = updateAccumulator >= updateInterval && !updateFreze;
+		if (updateState || nextUpdateStep){
+			updateAccumulator = 0;
+			nextUpdateStep=false;
 			testCiv.update(world);
 		}
 

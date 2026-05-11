@@ -1,1 +1,1 @@
-make world an extern variable
+Add ui system.

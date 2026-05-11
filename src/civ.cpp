@@ -14,14 +14,20 @@ void Civ::update(std::unordered_map<int64_t, Chunk>& world){
 	pending.clear();
 }
 
-void Civ::clear(){
-	for (auto ptr : creatures){
-		delete ptr;
-	}
-	creatures.clear();
+void Civ::clear() {
+    for (auto* c : pending) delete c;
+    pending.clear();
+
+    for (auto* c : creatures) delete c;
+    creatures.clear();
 }
 
 void Civ::evolve(std::unordered_map<int64_t, Chunk>& world){
+	if (creatures.size() < 2) {
+		std::cout << "Not enough creatures to evolve (need at least 2)\n";
+		return;
+	}
+
 	// Cache up fitness
 	std::vector<std::pair<float, Creature*>> scored;
 	scored.reserve(creatures.size());
@@ -47,6 +53,7 @@ void Civ::evolve(std::unordered_map<int64_t, Chunk>& world){
 }
 
 void Civ::printStats(){
+	std::cout << "\nAmount of creatures: " << creatures.size() << std::endl;
 	auto it = std::max_element(creatures.begin(), creatures.end(),[](Creature* a, Creature* b) {
         return a->dna.fitness() < b->dna.fitness();
     });

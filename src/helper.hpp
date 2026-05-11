@@ -10,7 +10,7 @@ std::pair<int,int> fromKey(int64_t key);
 
 Chunk makeChunk();
 void populateChunks(std::unordered_map<int64_t, Chunk>& world,
-		int chunksX, int chunksY, int s);
+		int chunksX, int chunksY);
 
 SDL_Texture* chunkTex(SDL_Renderer* renderer, Chunk& chunk, int bakeSize, SDL_Texture* atlas);
 

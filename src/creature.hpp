@@ -127,17 +127,16 @@ struct DNA {
 	}
 };
 
-
 class Creature {
 	public:
 		DNA dna;
-		int id;
+		int id=0;
 		int age=0;
 		int maxAge=100;
 		bool alive=true;
-		Pos pos;
 		Cell cell{};
 
+		Pos pos{};
 		Pos goal;
 
 		std::vector<Pos> path;
@@ -146,16 +145,17 @@ class Creature {
 
 		std::vector<Creature*> parents={};
 
-		Creature(Pos pos,std::unordered_map<int64_t,Chunk>& world,
-				int id=0):pos(pos), id(id){
+		Creature(Pos pos,std::unordered_map<int64_t,Chunk>& /*world*/,
+				int id=0):id(id), pos(pos){
 		}
 
 		virtual Creature* spawn(Pos pos, std::unordered_map<int64_t, Chunk>& world, int id) const = 0;
-		virtual void init(std::unordered_map<int64_t, Chunk>& world){};
+		virtual void init(std::unordered_map<int64_t, Chunk>& /*world*/){};
 		void update(std::unordered_map<int64_t, Chunk>& world,
 				std::vector <Creature*> creatures);
 
-		void updateMood();
+		void updateMood(std::unordered_map<int64_t, Chunk>& world);
+
 
 		void updatePosition(std::unordered_map<int64_t, Chunk>& world,Pos newPos);
 
@@ -195,21 +195,20 @@ class Human : public CreatureBase<Human>{
 		Human(Pos pos,std::unordered_map<int64_t,Chunk>& world,int id)
 			:CreatureBase(pos, world, id){
 				dna.add({"foodLove", std::uniform_real_distribution<float>(0.01f, 0.5f)(rng), 0.01});
-				dna.add({"sight", std::uniform_real_distribution<float>(3.0f, 10.0f)(rng), 15.0f});
+				dna.add({"sight", std::uniform_real_distribution<float>(500.0f, 600.0f)(rng), 600.0f});
 				dna.add({"agility", std::uniform_real_distribution<float>(1.0f, 3.0f)(rng), 5.0f});
 				dna.add({"iq", std::uniform_real_distribution<float>(30.0f, 50.0f)(rng), 100.0f});
 			}
+
 		void init(std::unordered_map<int64_t, Chunk>& world) override {
 			cell.fg.row=2;
 			cell.fg.column=std::uniform_int_distribution<int>(0, 5)(rng);
 			cell.fg.state=true;
 
-			cell.bg.row=0;
-			cell.bg.column=0;
-			cell.bg.state=true;
+			cell.bg=checkCell(world, pos).bg;
 
 			changeCell(world, pos, cell, false);
 
-			pathFind(world);
+			//pathFind(world);
 		}
 };

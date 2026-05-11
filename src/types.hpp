@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <SDL3/SDL.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3_image/SDL_image.h>
@@ -8,6 +9,7 @@
 #include <string>
 #include <algorithm>
 #include <random>
+#include <memory>
 
 extern std::mt19937 rng;
 
@@ -48,8 +50,8 @@ enum Tiles{
 };
 
 struct AtlasPos{
-	short int row=0;
-	short int column=0;
+	short int row=-1;
+	short int column=-1;
 	bool state=false;
 };
 
@@ -57,29 +59,17 @@ struct Cell {
 	AtlasPos fg;
 	AtlasPos bg;
 
-	bool operator==(const Cell& other){
-		return (fg.row==other.fg.row && fg.column==other.fg.column &&
-				fg.state==other.fg.state && bg.row==other.bg.row &&
-				bg.column==other.bg.column && bg.state==other.bg.state);
+	bool mask(const Cell& other) const{
+		bool bgR=(other.bg.row==-1 || bg.row==other.bg.row);
+		bool bgC=(other.bg.column==-1 || bg.column==other.bg.column);
+		bool bgS=(bg.state==other.bg.state);
+
+		bool fgR=(other.fg.row==-1 || fg.row==other.fg.row);
+		bool fgC=(other.fg.column==-1 || fg.column==other.fg.column);
+		bool fgS=(fg.state==other.fg.state);
+
+		return (bgR&&bgC&&bgS && fgR&&fgC&&fgS);
 	}
-};
-
-struct CellHash {
-    size_t operator()(const Cell& c) const {
-        size_t h = 0;
-        h ^= std::hash<short>()(c.fg.row) + 0x9e3779b9 + (h<<6) + (h>>2);
-        h ^= std::hash<short>()(c.fg.column) + 0x9e3779b9 + (h<<6) + (h>>2);
-        h ^= std::hash<short>()(c.bg.row) + 0x9e3779b9 + (h<<6) + (h>>2);
-        h ^= std::hash<short>()(c.bg.column) + 0x9e3779b9 + (h<<6) + (h>>2);
-        return h;
-    }
-};
-
-struct CellEqual {
-    bool operator()(const Cell& a, const Cell& b) const {
-        return a.fg.row == b.fg.row && a.fg.column == b.fg.column &&
-               a.bg.row == b.bg.row && a.bg.column == b.bg.column;
-    }
 };
 
 struct EditCell {
@@ -100,10 +90,38 @@ struct Chunk {
 	Cell c [chunkW*chunkH];
 	Cell ogC [chunkW*chunkH];
 
-	std::unordered_map<Cell, int, CellHash, CellEqual> cellCount;
+	std::unordered_map<int, int> presentBGR;
+	std::unordered_map<int, int> presentBGC;
+	std::unordered_map<int, int> presentFGR;
+	std::unordered_map<int, int> presentFGC;
 
 	SDL_Texture* tex = nullptr;
 	std::vector<EditCell> cells;
+
+	void add(Cell& cell, int idx, bool og=false){
+		c[idx] = cell;
+		if (og==true){ ogC[idx]=cell;}
+		if (cell.bg.row!=-1) presentBGR[cell.bg.row]++;
+		if (cell.bg.column!=-1) presentBGC[cell.bg.column]++;
+		if (cell.fg.row!=-1) presentFGR[cell.fg.row]++;
+		if (cell.fg.column!=-1) presentFGC[cell.fg.column]++;
+	}
+
+	void deletePresense(Cell& cell){
+		if (presentBGR[cell.bg.row]--==0) presentBGR.erase(cell.bg.row);
+		if (presentBGC[cell.bg.column]--==0) presentBGC.erase(cell.bg.column);
+		if (presentFGR[cell.fg.row]--==0) presentFGR.erase(cell.fg.row);
+		if (presentFGC[cell.fg.column]--==0) presentFGC.erase(cell.fg.column);
+	}
+
+	bool find(Cell& mask){
+		bool bgr=(mask.bg.row==-1 || presentBGR.count(mask.bg.row));
+		bool bgc=(mask.bg.column==-1 || presentBGC.count(mask.bg.column));
+		bool fgr=(mask.fg.row==-1 || presentFGR.count(mask.fg.row));
+		bool fgc=(mask.fg.column==-1 || presentFGC.count(mask.fg.column));
+
+		return (bgr && bgc && fgr && fgc);
+	}
 };
 
 struct ChunkCoord { int cx, cy, lx, ly, idx; };

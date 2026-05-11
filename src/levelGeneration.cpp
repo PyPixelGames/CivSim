@@ -107,9 +107,8 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 			else                     {type.bg.column= Water;}
 			type.bg.state=true;
 
-			//Apply the base
 			Chunk& chunk = world[key];
-			chunk.ogC[coords.idx] = type;
+			chunk.add(type, coords.idx, true);
 
 
 			// Vegitation generation
@@ -134,9 +133,8 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 				type.fg.state=true;
 			}
 
-			//Apply the rest
-			chunk.c[coords.idx] = type;
-			chunk.cellCount[type]++;
+			// Actually applying the change
+			chunk.add(type, coords.idx);
 			dirtyKeys.insert(key);
 
 			heightmap[ty * levelSizeX + tx] = terValue; // world position
@@ -251,20 +249,15 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 							int64_t key = getKey(cCoords.cx, cCoords.cy);
 							if (world.find(key) == world.end()) continue;
 							Chunk& chunk = world[key];
+							Cell water{chunk.ogC[cCoords.idx]};
+							water.bg.column = Water;
+							water.fg.state = false;
+							water.bg.column = Water;
+							water.fg.state = false;
 
-							// decrement old
-							Cell old = chunk.c[cCoords.idx];
-							if (--chunk.cellCount[old] == 0) chunk.cellCount.erase(old);
-
-							chunk.c[cCoords.idx].bg.column = Water;
-							chunk.c[cCoords.idx].fg.state = false;
-							chunk.ogC[cCoords.idx].bg.column = Water;
-							chunk.ogC[cCoords.idx].fg.state = false;
-
-							// increment new
-							chunk.cellCount[chunk.c[cCoords.idx]]++;
-
+							chunk.add(water, cCoords.idx, true);
 							dirtyKeys.insert(key);
+
 							carvedAdditions.push_back(wp);
 						}
 					}
@@ -294,13 +287,11 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 
 						int value = chunk.c[c.idx].bg.column;
 						if (value != Water && value != Mountain && value != MountainTop){
-							Cell old = chunk.c[c.idx];
-							if (--chunk.cellCount[old] == 0) chunk.cellCount.erase(old);
+							Cell sand = chunk.c[c.idx];
+							sand.bg.column = Sand;
+							sand.fg.state = false;
 
-							chunk.c[c.idx].bg.column = Sand;
-							chunk.c[c.idx].fg.state = false;
-
-							chunk.cellCount[chunk.c[c.idx]]++;
+							chunk.add(sand, c.idx, true);
 						}
 					}
 				}
@@ -308,6 +299,7 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 
 			riverCount++;
 			attempts=0;
+			std::cout << riverCount << std::endl;
 		} else {
 			attempts++;
 			riversSmall++;
@@ -317,6 +309,4 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 
 	std::cout << "rivers stuck: " << riversStuck << std::endl;
 	std::cout << "rivers small: " << riversSmall << std::endl;
-	std::cout << "river count: " << riverCount << std::endl;
-	std::cout << std::endl;
 }

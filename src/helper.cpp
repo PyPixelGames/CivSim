@@ -17,7 +17,7 @@ Chunk makeChunk(){
 	return c;
 }
 
-void populateChunks(std::unordered_map<int64_t, Chunk>& world,int chunksX, int chunksY,int s) {
+void populateChunks(std::unordered_map<int64_t, Chunk>& world,int chunksX, int chunksY) {
 	for (int cy = 0; cy < chunksY; cy++)
 		for (int cx = 0; cx < chunksX; cx++) {
 			int64_t key = getKey(cx, cy);
@@ -93,7 +93,7 @@ void editTex(SDL_Renderer* renderer, Chunk& chunk,int bakeSize, SDL_Texture* atl
 
 
 		int idx = cell.y * chunkW + cell.x;
-		chunk.c[idx] = cell.c;
+		chunk.add(cell.c, idx);
 	}
 	SDL_SetRenderTarget(renderer, nullptr);
 }
@@ -176,14 +176,14 @@ void changeCell(std::unordered_map<int64_t, Chunk>& world, Pos p, Cell c, bool r
     EditCell cell;
     cell.x = coords.lx;
     cell.y = coords.ly;
-    cell.c = restore ? chunk.ogC[coords.ly * chunkW + coords.lx] : c;
-    chunk.cells.push_back(cell);
-
-	Cell oldCell = chunk.c[coords.ly * chunkW + coords.lx];
-	if (--chunk.cellCount[oldCell] == 0){
-		chunk.cellCount.erase(oldCell);
+	int idx = coords.ly * chunkW + coords.lx;
+	if (restore){
+		cell.c = chunk.ogC[idx];
+	}else{
+		cell.c = c;
 	}
-	chunk.cellCount[cell.c]++;
+	chunk.deletePresense(chunk.c[idx]);
+    chunk.cells.push_back(cell);
 }
 
 Cell checkCell(std::unordered_map<int64_t, Chunk>& world, Pos p){
