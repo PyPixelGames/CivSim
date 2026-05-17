@@ -25,8 +25,8 @@ void updateVisibleChunks(std::unordered_map<int64_t, Chunk>& world, SDL_Renderer
 		SDL_Texture* atlas,int minCX,int maxCX,int minCY,int maxCY,int bakeSize);
 
 
-void changeCell(std::unordered_map<int64_t, Chunk>& world,Pos p,Cell c,bool restore);
+void changeCell(std::unordered_map<int64_t, Chunk>& world,Pos p,Cell c,bool restore=false);
 
-Cell checkCell(std::unordered_map<int64_t, Chunk>& world, Pos p);
+Cell checkCell(std::unordered_map<int64_t, Chunk>& world, Pos p, bool og=false);
 
 float clampFloat(float f, float l, float h);

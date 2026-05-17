@@ -2,6 +2,8 @@
 #include <random>
 #include "pathFinding.hpp"
 
+class Civ;
+
 using namespace TextColor;
 static std::uniform_int_distribution<int> RandomPos(1, 50);
 
@@ -134,10 +136,16 @@ class Creature {
 		int age=0;
 		int maxAge=100;
 		bool alive=true;
-		Cell cell{};
+
+		AtlasPos img{};
+
+		Civ* civ;
 
 		Pos pos{};
-		Pos goal;
+		Pos goal{};
+
+		Cell standingOn;
+		std::unordered_map<std::string, float> state;
 
 		std::vector<Pos> path;
 		Mood mood;
@@ -146,16 +154,16 @@ class Creature {
 		std::vector<Creature*> parents={};
 
 		Creature(Pos pos,std::unordered_map<int64_t,Chunk>& /*world*/,
-				int id=0):id(id), pos(pos){
+				int id, Civ* civ):id(id), pos(pos), civ(civ){
 		}
 
 		virtual Creature* spawn(Pos pos, std::unordered_map<int64_t, Chunk>& world, int id) const = 0;
 		virtual void init(std::unordered_map<int64_t, Chunk>& /*world*/){};
+
+		virtual void updateMood(std::unordered_map<int64_t, Chunk>& world){}
+
 		void update(std::unordered_map<int64_t, Chunk>& world,
 				std::vector <Creature*> creatures);
-
-		void updateMood(std::unordered_map<int64_t, Chunk>& world);
-
 
 		void updatePosition(std::unordered_map<int64_t, Chunk>& world,Pos newPos);
 
@@ -175,40 +183,62 @@ class Creature {
 			std::cout << std::endl;
 		}
 
+		float checkState(std::string state){
+			auto it=this->state.find(state);
+			if (it!=this->state.end()){
+				return it->second;
+			}else{
+				return 0.0f;
+			}
+		}
+
+		bool changeState(std::string state, float value){
+			auto it=this->state.find(state);
+			if (it!=this->state.end()){
+				it->second = value;
+				return true;
+			}
+			return false;
+		}
+
 		virtual ~Creature() = default;
 };
 
 template<typename Derived>
 class CreatureBase : public Creature {
 	public:
-		CreatureBase(Pos pos, std::unordered_map<int64_t, Chunk>& world, int id)
-			: Creature(pos, world, id) {}
+		CreatureBase(Pos pos, std::unordered_map<int64_t, Chunk>& world, int id, Civ* civ)
+			: Creature(pos, world, id, civ) {}
 
 		Creature* spawn(Pos pos, std::unordered_map<int64_t, Chunk>& world, int id) const override {
-			return new Derived(pos, world, id);
+			return new Derived(pos, world, id, civ);  // pass civ down
 		}
 };
 
 
 class Human : public CreatureBase<Human>{
 	public:
-		Human(Pos pos,std::unordered_map<int64_t,Chunk>& world,int id)
-			:CreatureBase(pos, world, id){
+		Human(Pos pos,std::unordered_map<int64_t,Chunk>& world,int id, Civ* civ)
+			:CreatureBase(pos, world, id, civ){
 				dna.add({"foodLove", std::uniform_real_distribution<float>(0.01f, 0.5f)(rng), 0.01});
-				dna.add({"sight", std::uniform_real_distribution<float>(500.0f, 600.0f)(rng), 600.0f});
+				dna.add({"sight", std::uniform_real_distribution<float>(100.0f, 150.0f)(rng), 600.0f});
 				dna.add({"agility", std::uniform_real_distribution<float>(1.0f, 3.0f)(rng), 5.0f});
 				dna.add({"iq", std::uniform_real_distribution<float>(30.0f, 50.0f)(rng), 100.0f});
 			}
 
 		void init(std::unordered_map<int64_t, Chunk>& world) override {
-			cell.fg.row=2;
-			cell.fg.column=std::uniform_int_distribution<int>(0, 5)(rng);
-			cell.fg.state=true;
+			img.row=2;
+			img.column=std::uniform_int_distribution<int>(0, 5)(rng);
+			img.state=true;
 
-			cell.bg=checkCell(world, pos).bg;
+			Cell c = checkCell(world, pos);
+			c.entity = img;
 
-			changeCell(world, pos, cell, false);
-
+			changeCell(world, pos, c, false);
 			//pathFind(world);
+
+			state.insert({"mealInSight", 1.0f});
 		}
+
+		void updateMood(std::unordered_map<int64_t, Chunk>& world) override;
 };

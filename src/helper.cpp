@@ -59,6 +59,13 @@ SDL_Texture* chunkTex(SDL_Renderer* renderer, Chunk& chunk, int bakeSize, SDL_Te
 				(float)ogBakeSize,(float)ogBakeSize};
 			SDL_RenderTexture(renderer, atlas, &src, &dst);
 		}
+
+		if (chunk.c[i].entity.state){
+			SDL_FRect src = {(float)(chunk.c[i].entity.row*ogBakeSize),
+				(float)(chunk.c[i].entity.column*ogBakeSize),
+				(float)ogBakeSize,(float)ogBakeSize};
+			SDL_RenderTexture(renderer, atlas, &src, &dst);
+		}
 	}
 
 	SDL_SetRenderTarget(renderer, nullptr);
@@ -87,6 +94,12 @@ void editTex(SDL_Renderer* renderer, Chunk& chunk,int bakeSize, SDL_Texture* atl
 
 		if (cell.c.fg.state){
 			SDL_FRect src = {(float)(cell.c.fg.row*ogBakeSize), (float)(cell.c.fg.column*ogBakeSize),
+				(float)ogBakeSize,(float)ogBakeSize};
+			SDL_RenderTexture(renderer, atlas, &src, &dst);
+		}
+		if (cell.c.entity.state){
+			SDL_FRect src = {(float)(cell.c.entity.row*ogBakeSize),
+				(float)(cell.c.entity.column*ogBakeSize),
 				(float)ogBakeSize,(float)ogBakeSize};
 			SDL_RenderTexture(renderer, atlas, &src, &dst);
 		}
@@ -179,6 +192,7 @@ void changeCell(std::unordered_map<int64_t, Chunk>& world, Pos p, Cell c, bool r
 	int idx = coords.ly * chunkW + coords.lx;
 	if (restore){
 		cell.c = chunk.ogC[idx];
+		cell.c.entity = {-1, -1, false};
 	}else{
 		cell.c = c;
 	}
@@ -186,11 +200,15 @@ void changeCell(std::unordered_map<int64_t, Chunk>& world, Pos p, Cell c, bool r
     chunk.cells.push_back(cell);
 }
 
-Cell checkCell(std::unordered_map<int64_t, Chunk>& world, Pos p){
+Cell checkCell(std::unordered_map<int64_t, Chunk>& world, Pos p, bool og){
 	ChunkCoord coords = toChunk(p.x, p.y);
 	auto it = world.find(getKey(coords.cx, coords.cy));
 	if (it == world.end()) return Cell{}; // sentinel
-	return it->second.c[coords.ly * chunkW + coords.lx];
+	if (!og){
+		return it->second.c[coords.ly * chunkW + coords.lx];
+	}else{
+		return it->second.ogC[coords.ly * chunkW + coords.lx];
+	}
 }
 
 float clampFloat(float f, float l, float h){

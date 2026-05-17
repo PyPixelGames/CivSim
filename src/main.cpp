@@ -1,4 +1,5 @@
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_keycode.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3_image/SDL_image.h>
 #include <iostream>
@@ -7,10 +8,12 @@
 #include "helper.hpp"
 #include "levelGeneration.hpp"
 #include "civ.hpp"
+#include "creature.hpp"
 #include "logs.hpp"
 
 using namespace TextColor;
-unsigned int seed = std::random_device{}();
+//unsigned int seed = std::random_device{}();
+unsigned int seed = 3781873310;
 std::mt19937 rng(seed);
 
 int main() {
@@ -42,7 +45,9 @@ int main() {
 		SDL_DestroyWindow(window); TTF_Quit(); SDL_Quit();
 		return 1;
 	}
-	SDL_SetRenderVSync(renderer, true);
+
+	bool vsync=true;
+	SDL_SetRenderVSync(renderer, vsync);
 
 	int width = 0, height = 0;
 	SDL_GetRenderOutputSize(renderer, &width, &height);
@@ -51,7 +56,7 @@ int main() {
 	int worldX = 0;
 	int worldY = 0;
 	int sizeChange = 50;
-	int movingSpeed = 300;
+	int movingSpeed = 500;
 
 	bool updateFreze=true;
 	bool nextUpdateStep=false;
@@ -78,6 +83,8 @@ int main() {
 	populateChunks(world, 100, 100);
 	std::cout<<"----- WORLD GENERATION -----\npopulation of chunks with blanks complete\n"<<std::endl;
 
+	std::cout << "\n" << seed << std::endl;
+
 	generateLevel(world, renderer, bakeSize, atlas);
 	std::cout << "World generation complete\n-----\n" << std::endl;
 
@@ -90,8 +97,8 @@ int main() {
 
 	Civ testCiv;
 
-	for (int i=0; i<1; i++){
-		Human* c = new Human({0, i}, world, testCiv.id);
+	for (int i=0; i<2; i++){
+		Human* c = new Human({0, i}, world, testCiv.id, &testCiv);
 		testCiv.pending.push_back(c);
 		testCiv.id++;
 	}
@@ -99,7 +106,8 @@ int main() {
 	Uint64 lastTime = SDL_GetTicks();
 	float deltaTime;
 	float updateAccumulator = 0.0f;
-	const float updateInterval = 0.1f;
+	float updateInterval = 0.1f;
+	float speedChange = 0.01f;
 	const int maxUpdateChunks = 15;
 	int chunksUpdated=0;
 
@@ -127,10 +135,24 @@ int main() {
 				if (event.key.key == SDLK_ESCAPE) running = false;
 				if (event.key.key == SDLK_F){
 					updateFreze = !updateFreze;
-					std::cout << "Changed updatFreze to: " << updateFreze << std::endl;
+					std::cout << "Changed updateFreze to: " << updateFreze << std::endl;
 				}
 				if (event.key.key == SDLK_T){
 					nextUpdateStep=true;
+				}
+				if (event.key.key == SDLK_E){
+					testCiv.evolve(world);
+				}
+
+				if (event.key.key == SDLK_I){
+					updateInterval+=speedChange;
+				}
+				if (event.key.key == SDLK_O && updateInterval>=speedChange){
+					updateInterval-=speedChange;
+				}
+				if (event.key.key == SDLK_V && updateInterval>=speedChange){
+					vsync = !vsync;
+					SDL_SetRenderVSync(renderer, vsync);
 				}
 			}
 		}
@@ -190,6 +212,8 @@ int main() {
 		if (updateState || nextUpdateStep){
 			updateAccumulator = 0;
 			nextUpdateStep=false;
+
+			testCiv.evolve(world);
 			testCiv.update(world);
 		}
 

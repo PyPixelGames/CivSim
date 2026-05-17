@@ -58,6 +58,7 @@ struct AtlasPos{
 struct Cell {
 	AtlasPos fg;
 	AtlasPos bg;
+	AtlasPos entity;
 
 	bool mask(const Cell& other) const{
 		bool bgR=(other.bg.row==-1 || bg.row==other.bg.row);
@@ -67,6 +68,7 @@ struct Cell {
 		bool fgR=(other.fg.row==-1 || fg.row==other.fg.row);
 		bool fgC=(other.fg.column==-1 || fg.column==other.fg.column);
 		bool fgS=(fg.state==other.fg.state);
+
 
 		return (bgR&&bgC&&bgS && fgR&&fgC&&fgS);
 	}

@@ -1,1 +1,1 @@
-Add ui system.
+Add a system that doesn't update everyone in the same tick, but rather on bulks.
