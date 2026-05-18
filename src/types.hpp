@@ -13,6 +13,10 @@
 
 extern std::mt19937 rng;
 
+constexpr int amount = 1;
+constexpr int levelSizeX = 640*amount;
+constexpr int levelSizeY = 640*amount;
+
 constexpr int chunkW = 32;
 constexpr int chunkH = 32;
 constexpr int gapSize=0; //increase this to make the gaps smaller

@@ -17,7 +17,7 @@ unsigned int seed = 3781873310;
 std::mt19937 rng(seed);
 
 int main() {
-	TeeBuf tee("../src/logs.txt");
+	TeeBuf tee("src/logs.txt");
     std::cout.rdbuf(&tee);
 	tee.clear();
 	tee.setMode(LogMode::FileOnly);
@@ -65,7 +65,7 @@ int main() {
 
 	GameFont font;
 	font.baseSize = bakeSize;
-	font.ttf = TTF_OpenFont("../src/fonts/AsciiFont.ttf", bakeSize);
+	font.ttf = TTF_OpenFont("src/fonts/AsciiFont.ttf", bakeSize);
 	if (!font.ttf) {
 		std::cerr << "TTF_OpenFont failed: " << SDL_GetError() << "\n";
 		SDL_DestroyRenderer(renderer); SDL_DestroyWindow(window);
@@ -73,15 +73,15 @@ int main() {
 		return 1;
 	}
 
-	SDL_Texture *atlas = IMG_LoadTexture(renderer, "../src/images/atlas.png");
+	SDL_Texture *atlas = IMG_LoadTexture(renderer, "src/images/atlas.png");
 
 	if (!atlas) {
 		std::cerr << "Atlas load failed: " << SDL_GetError() << "\n";
 	}
 	std::cout << "Init fine\n" <<std::endl;
 
-	populateChunks(world, 100, 100);
 	std::cout<<"----- WORLD GENERATION -----\npopulation of chunks with blanks complete\n"<<std::endl;
+	populateChunks(world, 100, 100);
 
 	std::cout << "\n" << seed << std::endl;
 
@@ -197,10 +197,10 @@ int main() {
 			zoomAround(cellSize - sizeChange * deltaTime);
 		}
 
-		if (keys[SDL_SCANCODE_D]) worldX += (int)(movingSpeed * deltaTime);
+		if (keys[SDL_SCANCODE_D] && worldX<levelSizeX) worldX += (int)(movingSpeed * deltaTime);
 		if (keys[SDL_SCANCODE_A] && worldX > 0) worldX -= (int)(movingSpeed * deltaTime);
 
-		if (keys[SDL_SCANCODE_S]) worldY += (int)(movingSpeed * deltaTime);
+		if (keys[SDL_SCANCODE_S] && worldY<levelSizeY) worldY += (int)(movingSpeed * deltaTime);
 		if (keys[SDL_SCANCODE_W] && worldY > 0) worldY -= (int)(movingSpeed * deltaTime);
 
 		SDL_SetRenderTarget(renderer, nullptr);
@@ -268,7 +268,6 @@ int main() {
 	SDL_DestroyWindow(window);
 	TTF_Quit();
 	SDL_Quit();
-	testCiv.clear();
 
 	std::cout << bold << "\nunloaded" << reset << std::endl;
 	return 0;

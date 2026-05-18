@@ -8,9 +8,7 @@
 #include <iostream>
 #include <algorithm>
 
-static int amount = 1;
-static int levelSizeX = 640*amount;
-static int levelSizeY = 640*amount;
+
 static std::uniform_real_distribution<float> dist(1.0f, 100000.0f);
 
 static std::uniform_real_distribution<float> biomeBlend(0.0f, 1.0f);
@@ -25,7 +23,7 @@ static std::uniform_int_distribution<int> rp(0, levelSizeX - 1);
 int riversStuck=0;
 int riversSmall=0;
 
-float checkHeightValue(Pos pos, float heightmap[]){
+float checkHeightValue(Pos pos, std::vector<float> heightmap){
 	if (pos.x < 0 || pos.x >= levelSizeX ||
 			pos.y < 0 || pos.y >= levelSizeY) return 0.0f;
 
@@ -68,7 +66,7 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 	float biomeVarY = dist(rng);
 
 	std::unordered_set<int64_t> dirtyKeys;
-	float heightmap[levelSizeX*levelSizeY];
+	std::vector<float> heightmap(levelSizeX * levelSizeY);
 
 
 	// Terrain generation

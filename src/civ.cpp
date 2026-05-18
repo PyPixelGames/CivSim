@@ -1,6 +1,11 @@
 #include <iostream>
 #include "civ.hpp"
-#include "creature.hpp"
+#include "creature.hpp" // Creature is fully defined here
+
+Civ::~Civ() {
+    for (auto* c : pending)   delete c;
+    for (auto* c : creatures) delete c;
+}
 
 void Civ::update(std::unordered_map<int64_t, Chunk>& world){
 	for (size_t i=0; i<creatures.size(); i++){
@@ -13,14 +18,6 @@ void Civ::update(std::unordered_map<int64_t, Chunk>& world){
 		creatures.push_back(p);
 	}
 	pending.clear();
-}
-
-void Civ::clear() {
-    for (auto* c : pending) delete c;
-    pending.clear();
-
-    for (auto* c : creatures) delete c;
-    creatures.clear();
 }
 
 void Civ::evolve(std::unordered_map<int64_t, Chunk>& world){

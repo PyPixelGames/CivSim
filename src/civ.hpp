@@ -16,8 +16,8 @@ class Civ{
 		std::unordered_set<int64_t> claimedCells;
 
 		Civ(){};
+		~Civ();
 		void update(std::unordered_map<int64_t, Chunk>& world);
-		void clear();
 		void evolve(std::unordered_map<int64_t, Chunk>& world);
 		void printStats();
 };

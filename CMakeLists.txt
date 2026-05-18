@@ -70,3 +70,6 @@ target_link_libraries(CivSim PRIVATE
     SDL3_ttf::SDL3_ttf
     SDL3_image::SDL3_image
 )
+
+add_compile_options(-fsanitize=address -fsanitize=leak -g)
+add_link_options(-fsanitize=address -fsanitize=leak)
