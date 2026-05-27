@@ -1,5 +1,6 @@
 #pragma once
 #include "types.hpp"
+#include <SDL3_ttf/SDL_ttf.h>
 #include <unordered_map>
 #include <cstdint>
 #include <random>
@@ -30,3 +31,8 @@ void changeCell(std::unordered_map<int64_t, Chunk>& world,Pos p,Cell c,bool rest
 Cell checkCell(std::unordered_map<int64_t, Chunk>& world, Pos p, bool og=false);
 
 float clampFloat(float f, float l, float h);
+
+SDL_Texture* renderText(SDL_Renderer* renderer, std::string string, TTF_Font* font, SDL_Color color,
+		int size=0);
+
+void setColor(SDL_Renderer* renderer, SDL_Color c);

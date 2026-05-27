@@ -1,5 +1,7 @@
 #include "helper.hpp"
 #include "types.hpp"
+#include <SDL3/SDL_render.h>
+#include <SDL3_ttf/SDL_ttf.h>
 
 int64_t getKey(int cx, int cy) {
 	return (int64_t(cx) << 32) | int64_t(uint32_t(cy));
@@ -28,8 +30,8 @@ void populateChunks(std::unordered_map<int64_t, Chunk>& world,int chunksX, int c
 
 SDL_Texture* chunkTex(SDL_Renderer* renderer, Chunk& chunk, int bakeSize, SDL_Texture* atlas) {
 	SDL_Texture* tex = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_TARGET,
-			stride * chunkW,
-			stride * chunkH);
+			bakeSize * chunkW,
+			bakeSize * chunkH);
 	if (!tex) return nullptr;
 	SDL_SetTextureBlendMode(tex, SDL_BLENDMODE_BLEND);
 
@@ -216,4 +218,18 @@ float clampFloat(float f, float l, float h){
 	if (f > h) f = h;
 
 	return f;
+}
+
+SDL_Texture* renderText(SDL_Renderer* renderer, std::string string, TTF_Font* font, SDL_Color color,
+		int size){
+	//WARNING: expensive operation!
+	SDL_Surface* surface = TTF_RenderText_Blended(font, string.c_str(), 0, color);
+	SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surface);
+	SDL_DestroySurface(surface);
+
+	return tex;
+}
+
+void setColor(SDL_Renderer* renderer, SDL_Color c){
+	SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
 }

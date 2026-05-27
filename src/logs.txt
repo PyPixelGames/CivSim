@@ -4,76 +4,15 @@ Init fine
 population of chunks with blanks complete
 
 
-3781873310
+3027066518
 rivers stuck: 0
 rivers small: 0
 World generation complete
 -----
 
-Changed updateFreze to: 0
-Not enough creatures to evolve (need at least 2)
-FIND FOOD
-Found bush: 3, 7
-Path constructed
-FIND FOOD
-Found bush: 6, 6
-Path constructed
-FIND FOOD
-Found bush: 7, 8
-Path constructed
-FIND FOOD
-Found bush: 8, 14
-Path constructed
-FIND FOOD
-Found bush: 10, 13
-Path constructed
-FIND FOOD
-Found bush: 13, 13
-Path constructed
-FIND FOOD
-Found bush: 20, 9
-Path constructed
-Reached Bush
 
-FIND FOOD
-Found bush: 6, 6
-Path constructed
-Reached Bush
 
-FIND FOOD
-Found bush: 3, 7
-Path constructed
-FIND FOOD
-Found bush: 13, 16
-Path constructed
-FIND FOOD
-Found bush: 41, 27
-Path constructed
-FIND FOOD
-Found bush: 53, 16
-Path constructed
-
-Amount of creatures: 11
-
---- STATS ---
-ID 0 fitness: 0.00181406
-
-Best: 
-
---- ID: 4 ---
-Parent ID's: 1 | 3
-
-Fitness: 0.00182532
-Last mutation: iq was added 0.0952825
-
-foodLove: 0.0671182
-sight: 117.819
-agility: 2.89042
-iq: 37.4974
---------
-
-Improvement: 1.1251e-05
--------------
-
+##########MAIN LOOP##########
+##########MAIN LOOP##########
 
 unloaded

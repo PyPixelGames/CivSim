@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_render.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3_image/SDL_image.h>
 #include <vector>
@@ -19,10 +20,10 @@ constexpr int levelSizeY = 640*amount;
 
 constexpr int chunkW = 32;
 constexpr int chunkH = 32;
-constexpr int gapSize=0; //increase this to make the gaps smaller
 constexpr int ogBakeSize=64;
 inline int bakeSize=64;
-inline float stride = bakeSize-gapSize;
+
+constexpr float bWidth=5;
 
 constexpr SDL_Color bg = {25, 25, 25, 255};
 

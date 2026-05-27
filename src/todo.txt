@@ -1,1 +1,9 @@
-Add a system that doesn't update everyone in the same tick, but rather on bulks.
+UI:
+-	basic window ui infrostructure
+	-	window popup and closing
+	-	line always connecting to the object the UI is about ??
+-	A good way to display text
+-	Addition of butons and somehow their functionality
+-	addition of sliders and other peices of interactive media
+
+

@@ -3,8 +3,8 @@
 #include "creature.hpp" // Creature is fully defined here
 
 Civ::~Civ() {
-    for (auto* c : pending)   delete c;
-    for (auto* c : creatures) delete c;
+	for (auto* c : pending)   delete c;
+	for (auto* c : creatures) delete c;
 }
 
 void Civ::update(std::unordered_map<int64_t, Chunk>& world){
@@ -34,8 +34,8 @@ void Civ::evolve(std::unordered_map<int64_t, Chunk>& world){
 
 	//Sort by fitness with biggest being first
 	std::sort(scored.begin(), scored.end(),[](const auto& a, const auto& b) {
-		return a.first > b.first;
-		});
+			return a.first > b.first;
+			});
 
 	DNA newDNA = scored[0].second->dna.crossover(scored[1].second->dna);
 	Creature* c = scored[0].second->spawn({0, 0}, world, this->id);
@@ -51,28 +51,30 @@ void Civ::evolve(std::unordered_map<int64_t, Chunk>& world){
 }
 
 void Civ::printStats(){
-	std::cout << "\nAmount of creatures: " << creatures.size() << std::endl;
-	auto it = std::max_element(creatures.begin(), creatures.end(),[](Creature* a, Creature* b) {
-        return a->dna.fitness() < b->dna.fitness();
-    });
-	Creature* best = (it != creatures.end()) ? *it : nullptr;
+	if (creatures.size()){
+		std::cout << "\nAmount of creatures: " << creatures.size() << std::endl;
+		auto it = std::max_element(creatures.begin(), creatures.end(),[](Creature* a, Creature* b) {
+				return a->dna.fitness() < b->dna.fitness();
+				});
+		Creature* best = (it != creatures.end()) ? *it : nullptr;
 
-	auto it2 = std::find_if(creatures.begin(), creatures.end(),[](Creature* c) {
-        return c->id == 0;
-    });
-	Creature* first = (it2 != creatures.end()) ? *it2 : nullptr;
+		auto it2 = std::find_if(creatures.begin(), creatures.end(),[](Creature* c) {
+				return c->id == 0;
+				});
+		Creature* first = (it2 != creatures.end()) ? *it2 : nullptr;
 
-	std::cout << std::endl;
-	std::cout << cyan << bold << "--- STATS ---" << reset << std::endl;
-	std::cout << yellow << "ID 0 fitness: " << blue << first->dna.fitness() << reset << std::endl;
-	std::cout << std::endl;
+		std::cout << std::endl;
+		std::cout << cyan << bold << "--- STATS ---" << reset << std::endl;
+		std::cout << yellow << "ID 0 fitness: " << blue << first->dna.fitness() << reset << std::endl;
+		std::cout << std::endl;
 
-	std::cout << yellow << "Best: "<< reset << std::endl;
-	std::cout << std::endl;
-	best->debug();
+		std::cout << yellow << "Best: "<< reset << std::endl;
+		std::cout << std::endl;
+		best->debug();
 
-	std::cout << green << "Improvement: " << blue <<
-		best->dna.fitness()-first->dna.fitness() << reset << std::endl;
-	std::cout << cyan << bold << "-------------" << reset << std::endl;
-	std::cout << std::endl;
+		std::cout << green << "Improvement: " << blue <<
+			best->dna.fitness()-first->dna.fitness() << reset << std::endl;
+		std::cout << cyan << bold << "-------------" << reset << std::endl;
+		std::cout << std::endl;
+	}
 }

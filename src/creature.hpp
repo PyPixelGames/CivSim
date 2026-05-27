@@ -109,7 +109,7 @@ struct DNA {
 		int index = std::uniform_int_distribution<size_t>(0, keys.size() - 1)(rng);
 		const std::string& targetKey = keys[index];
 
-		float mutation = std::uniform_real_distribution<float>(-0.1, 0.1)(rng);
+		float mutation = std::uniform_real_distribution<float>(-0.5, 0.5)(rng);
 		genes[targetKey].value += mutation;
 
 		lastMutation = {targetKey, mutation};
