@@ -32,7 +32,6 @@ Cell checkCell(std::unordered_map<int64_t, Chunk>& world, Pos p, bool og=false);
 
 float clampFloat(float f, float l, float h);
 
-SDL_Texture* renderText(SDL_Renderer* renderer, std::string string, TTF_Font* font, SDL_Color color,
-		int size=0);
+SDL_Texture* renderText(SDL_Renderer* renderer, std::string string, TTF_Font* font, SDL_Color color);
 
 void setColor(SDL_Renderer* renderer, SDL_Color c);

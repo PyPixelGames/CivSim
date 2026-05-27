@@ -16,7 +16,7 @@ enum UIColors{
 
 struct UIPiece{
 	UIType type = UIType::TEXT;
-	Pos relativePos;
+	Pos relativePos={10, 10};
 
 	std::string name;
 
@@ -41,6 +41,8 @@ struct FloatingUI{
 	bool dirty=true;
 	SDL_Texture* tex=nullptr;
 
+	bool focused;
+
 	FloatingUI(){
 		colors[UIColors::MAIN]={225, 225, 225, 255};
 		colors[UIColors::BG]={0, 125, 125, 255};
@@ -48,6 +50,5 @@ struct FloatingUI{
 		colors[UIColors::BORDER]={0, 0, 0, 255};
 	}
 };
-
 
 void renderUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font);

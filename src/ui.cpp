@@ -31,8 +31,19 @@ void renderUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font){
 
 		for (auto& piece: ui.pieces){
 			if (piece->type==UIType::TEXT){
-				SDL_Texture* textTex=renderText(renderer, piece->name,
-						font, piece->colors[UIColors::MAIN]);
+				std::string text;
+				size_t fontPos=piece->name.find("@");
+				if(fontPos!=std::string::npos){
+					std::string size=piece->name.substr(0, fontPos);
+					text=piece->name.substr(fontPos+1);
+					TTF_SetFontSize(font, std::stoi(size));
+				}else{
+					TTF_SetFontSize(font, 18);
+					text=piece->name;
+				}
+
+				SDL_Texture* textTex=renderText(renderer,text,font,piece->colors[UIColors::MAIN]);
+
 				float w, h;
 				SDL_GetTextureSize(textTex, &w, &h);
 				SDL_FRect dst={

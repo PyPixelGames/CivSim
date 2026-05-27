@@ -114,6 +114,7 @@ void editTex(SDL_Renderer* renderer, Chunk& chunk,int bakeSize, SDL_Texture* atl
 }
 
 void drawFPS(SDL_Renderer* renderer, GameFont& font, float fps, int x, int y) {
+	TTF_SetFontSize(font.ttf, 70);
     std::string text = "FPS: " + std::to_string((int)fps);
     if (text != font.lastFpsText) {
         if (font.fpsTex) SDL_DestroyTexture(font.fpsTex);
@@ -220,8 +221,7 @@ float clampFloat(float f, float l, float h){
 	return f;
 }
 
-SDL_Texture* renderText(SDL_Renderer* renderer, std::string string, TTF_Font* font, SDL_Color color,
-		int size){
+SDL_Texture* renderText(SDL_Renderer* renderer, std::string string, TTF_Font* font, SDL_Color color){
 	//WARNING: expensive operation!
 	SDL_Surface* surface = TTF_RenderText_Blended(font, string.c_str(), 0, color);
 	SDL_Texture* tex = SDL_CreateTextureFromSurface(renderer, surface);

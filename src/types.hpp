@@ -27,6 +27,12 @@ constexpr float bWidth=5;
 
 constexpr SDL_Color bg = {25, 25, 25, 255};
 
+enum GameState{
+	GAME,
+	UI,
+	PAUSED
+};
+
 namespace TextColor {
     const std::string reset   = "\033[0m";
     const std::string bold    = "\033[1m";

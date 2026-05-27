@@ -4,7 +4,7 @@ Init fine
 population of chunks with blanks complete
 
 
-3027066518
+1290253803
 rivers stuck: 0
 rivers small: 0
 World generation complete
@@ -13,6 +13,9 @@ World generation complete
 
 
 ##########MAIN LOOP##########
+sdfasdfasdfadfadf
+
+dfgsdfgsdfgsd
 ##########MAIN LOOP##########
 
 unloaded

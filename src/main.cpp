@@ -83,10 +83,26 @@ int main() {
 
 	std::unordered_map<int64_t, Chunk> world;
 
+	float Mx, My;
+
+	GameState state=GameState::GAME;
+	uint32_t keyPressed;
+	std::string inputText="";
+
 	GameFont font;
 	font.baseSize = bakeSize;
 	font.ttf = TTF_OpenFont("src/fonts/AsciiFont.ttf", bakeSize);
 	if (!font.ttf) {
+		std::cerr << "TTF_OpenFont failed: " << SDL_GetError() << "\n";
+		SDL_DestroyRenderer(renderer);
+		SDL_DestroyWindow(window);
+		TTF_Quit();
+		SDL_Quit();
+		return 1;
+	}
+
+	TTF_Font *UIFont=TTF_OpenFont("src/fonts/inter.ttf", 28);
+	if (!UIFont){
 		std::cerr << "TTF_OpenFont failed: " << SDL_GetError() << "\n";
 		SDL_DestroyRenderer(renderer);
 		SDL_DestroyWindow(window);
@@ -100,6 +116,7 @@ int main() {
 	if (!atlas) {
 		std::cerr << "Atlas load failed: " << SDL_GetError() << "\n";
 	}
+
 	std::cout << "Init fine\n" << std::endl;
 
 	std::cout << "----- WORLD GENERATION -----\npopulation of chunks with blanks "
@@ -119,9 +136,17 @@ int main() {
 		testCiv.id++;
 	}
 
+	std::vector<FloatingUI*> allUI;
+
 	FloatingUI testUI;
 	testUI.r.w=500;
 	testUI.r.h=600;
+	testUI.focused=true;
+
+	auto testText=std::make_unique<UIPiece>();
+	testText->name="This text looks fine";
+	testUI.pieces.push_back(std::move(testText));
+	allUI.push_back(&testUI);
 
 	std::cout << "\n\n##########MAIN LOOP##########" << std::endl;
 	while (running) {
@@ -138,6 +163,7 @@ int main() {
 		if (deltaTime > 0.05f)
 			deltaTime = 0.05f;
 
+		SDL_GetMouseState(&Mx, &My);
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_EVENT_QUIT) {
 				running = false;
@@ -148,26 +174,33 @@ int main() {
 			if (event.type == SDL_EVENT_KEY_DOWN) {
 				if (event.key.key == SDLK_ESCAPE)
 					running = false;
-				if (event.key.key == SDLK_F) {
-					updateFreze = !updateFreze;
-					std::cout << "Changed updateFreze to: " << updateFreze << std::endl;
-				}
-				if (event.key.key == SDLK_T) {
-					nextUpdateStep = true;
-				}
-				if (event.key.key == SDLK_E) {
-					testCiv.evolve(world);
-				}
-
-				if (event.key.key == SDLK_I) {
-					updateInterval += speedChange;
-				}
-				if (event.key.key == SDLK_O && updateInterval >= speedChange) {
-					updateInterval -= speedChange;
-				}
-				if (event.key.key == SDLK_V && updateInterval >= speedChange) {
-					vsync = !vsync;
-					SDL_SetRenderVSync(renderer, vsync);
+				keyPressed = event.key.key;
+			}
+			if (event.type == SDL_EVENT_TEXT_INPUT) {
+				inputText=event.text.text;
+			}
+			if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+				if (event.button.button == SDL_BUTTON_LEFT) {
+					SDL_FPoint p = {Mx, My};
+					bool clickedOnUI=false;
+					for (auto ui: allUI){
+						if (SDL_PointInRectFloat(&p, &ui->r)){
+							ui->focused=true;
+							clickedOnUI=true;
+							break;
+						}
+					}
+					//Return to game if no UI was pressed
+					if (!clickedOnUI){
+						state=GameState::GAME;
+						for (auto ui: allUI){
+							ui->focused=false;
+						}
+						if (SDL_TextInputActive(window)) {
+							SDL_StopTextInput(window);
+						}
+						std::cout << std::endl;
+					}
 				}
 			}
 		}
@@ -175,7 +208,7 @@ int main() {
 		const bool *keys = SDL_GetKeyboardState(nullptr);
 
 		float mx, my;
-		SDL_MouseButtonFlags buttons = SDL_GetMouseState(&mx, &my);
+		SDL_MouseButtonFlags MouseButtons = SDL_GetMouseState(&mx, &my);
 
 		auto zoomAround = [&](float newCellSize) {
 			if (newCellSize < 8.0f)
@@ -208,22 +241,49 @@ int main() {
 			}
 		};
 
-		if (buttons & SDL_BUTTON_LMASK) {
-			zoomAround(cellSize + sizeChange * deltaTime);
-		}
-		if (buttons & SDL_BUTTON_RMASK) {
-			zoomAround(cellSize - sizeChange * deltaTime);
-		}
+		if (state==GameState::GAME){
+			if (MouseButtons & SDL_BUTTON_LMASK) {
+				zoomAround(cellSize + sizeChange * deltaTime);
+			}
+			if (MouseButtons & SDL_BUTTON_RMASK) {
+				zoomAround(cellSize - sizeChange * deltaTime);
+			}
 
-		if (keys[SDL_SCANCODE_D] && worldX < levelSizeX)
-			worldX += (int)(movingSpeed * deltaTime);
-		if (keys[SDL_SCANCODE_A] && worldX > 0)
-			worldX -= (int)(movingSpeed * deltaTime);
+			if (keys[SDL_SCANCODE_D] && worldX < levelSizeX)
+				worldX += (int)(movingSpeed * deltaTime);
+			if (keys[SDL_SCANCODE_A] && worldX > 0)
+				worldX -= (int)(movingSpeed * deltaTime);
 
-		if (keys[SDL_SCANCODE_S] && worldY < levelSizeY)
-			worldY += (int)(movingSpeed * deltaTime);
-		if (keys[SDL_SCANCODE_W] && worldY > 0)
-			worldY -= (int)(movingSpeed * deltaTime);
+			if (keys[SDL_SCANCODE_S] && worldY < levelSizeY)
+				worldY += (int)(movingSpeed * deltaTime);
+			if (keys[SDL_SCANCODE_W] && worldY > 0)
+				worldY -= (int)(movingSpeed * deltaTime);
+
+			if (keyPressed==SDLK_F) {
+				updateFreze = !updateFreze;
+				std::cout << "Changed updateFreze to: " << updateFreze << std::endl;
+			}
+			if (keyPressed==SDLK_T) {
+				nextUpdateStep = true;
+			}
+			if (keyPressed==SDLK_E) {
+				testCiv.evolve(world);
+			}
+			if (keyPressed==SDLK_I) {
+				updateInterval += speedChange;
+			}
+			if (keyPressed==SDLK_O && updateInterval >= speedChange) {
+				updateInterval -= speedChange;
+			}
+			if (keyPressed==SDLK_V && updateInterval >= speedChange) {
+				vsync = !vsync;
+				SDL_SetRenderVSync(renderer, vsync);
+			}
+		}else if (state==GameState::UI){
+			if (inputText!=""){
+				std::cout << inputText;
+			}
+		}
 
 		SDL_SetRenderTarget(renderer, nullptr);
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -279,8 +339,24 @@ int main() {
 		}
 
 		// Always update
-		renderUI(renderer, testUI, font.ttf);
+		bool uiState=false;
+		for (auto ui: allUI){
+			renderUI(renderer, *ui, UIFont);
+			if(ui->focused){
+				uiState=true;
+				SDL_StartTextInput(window);
+			}
+		}
 
+		//Update state
+		if (uiState){
+			state=GameState::UI;
+		}else{
+			state=GameState::GAME;
+		}
+
+		keyPressed=-1;
+		inputText="";
 		SDL_RenderPresent(renderer);
 	}
 	std::cout << "##########MAIN LOOP##########" << std::endl;
