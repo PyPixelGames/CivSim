@@ -187,6 +187,7 @@ int main() {
 					for (auto ui: allUI){
 						if (SDL_PointInRectFloat(&p, &ui->r)){
 							ui->focused=true;
+							ui->open=true;
 							clickedOnUI=true;
 							break;
 						}
