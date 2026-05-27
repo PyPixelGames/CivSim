@@ -42,6 +42,7 @@ struct FloatingUI{
 	SDL_Texture* tex=nullptr;
 
 	bool focused;
+	bool open;
 
 	FloatingUI(){
 		colors[UIColors::MAIN]={225, 225, 225, 255};

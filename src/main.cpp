@@ -142,6 +142,7 @@ int main() {
 	testUI.r.w=500;
 	testUI.r.h=600;
 	testUI.focused=true;
+	testUI.open=true;
 
 	auto testText=std::make_unique<UIPiece>();
 	testText->name="This text looks fine";
@@ -194,7 +195,10 @@ int main() {
 					if (!clickedOnUI){
 						state=GameState::GAME;
 						for (auto ui: allUI){
-							ui->focused=false;
+							if (ui->focused){
+								ui->focused=false;
+								ui->open=false;
+							}
 						}
 						if (SDL_TextInputActive(window)) {
 							SDL_StopTextInput(window);
