@@ -85,6 +85,7 @@ int main() {
 
 	SDL_FPoint MousePos;
 	SDL_FPoint leftclick={-1, -1};
+	short int holding=-5;
 
 	GameState state=GameState::GAME;
 	uint32_t keyPressed;
@@ -384,7 +385,13 @@ int main() {
 			state=GameState::GAME;
 		}
 
-		leftclick={-1, -1};
+		if (leftclick.x>=0 && leftclick.y>=0) leftclick={-1, -1};
+		if (leftclick.x<=holding && leftclick.y<=holding){
+			std::cout << "holding" << std::endl;
+		}else{
+			leftclick.x-=1*deltaTime;
+			leftclick.y-=1*deltaTime;
+		}
 		keyPressed=-1;
 		inputText="";
 		SDL_RenderPresent(renderer);
