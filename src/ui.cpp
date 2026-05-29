@@ -3,8 +3,9 @@
 #include <SDL3/SDL_render.h>
 
 
-void renderUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font){
+void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, SDL_FPoint& leftclick){
 	if (ui.open){
+		//RENDER
 		if (ui.dirty){
 			if (ui.tex) {
 				SDL_DestroyTexture(ui.tex);
@@ -21,16 +22,27 @@ void renderUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font){
 
 
 			SDL_FRect fillRect = {0, 0, ui.r.w, ui.r.h};
-			setColor(renderer,ui.colors[UIColors::BORDER]);
-			SDL_RenderFillRect(renderer, &fillRect);
+			if (ui.focused){
+				setColor(renderer,ui.colors[UIColors::BORDER]);
+				SDL_RenderFillRect(renderer, &fillRect);
 
 
-			SDL_FRect fillRectSmall = {bWidth, bWidth, ui.r.w-(bWidth*2), ui.r.h-(bWidth*2)};
-			setColor(renderer,ui.colors[UIColors::BG]);
-			SDL_RenderFillRect(renderer, &fillRectSmall);
+				SDL_FRect fillRectSmall = {bWidth, bWidth, ui.r.w-(bWidth*2), ui.r.h-(bWidth*2)};
+				setColor(renderer,ui.colors[UIColors::BG]);
+				SDL_RenderFillRect(renderer, &fillRectSmall);
+			}else{
+				setColor(renderer,ui.colors[UIColors::BG]);
+				SDL_RenderFillRect(renderer, &fillRect);
+			}
 
 
 			for (auto& piece: ui.pieces){
+				SDL_FRect r={
+					static_cast<float>(piece->relativePos.x),
+					static_cast<float>(piece->relativePos.y),
+					piece->width,
+					piece->height
+				};
 				if (piece->type==UIType::TEXT){
 					std::string text;
 					size_t fontPos=piece->name.find("@");
@@ -54,6 +66,11 @@ void renderUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font){
 					SDL_RenderTexture(renderer, textTex, nullptr, &dst);
 					SDL_DestroyTexture(textTex);
 				}
+
+				if (piece->type==UIType::BUTTON){
+					setColor(renderer,piece->colors[UIColors::BG]);
+					SDL_RenderFillRect(renderer, &r);
+				}
 			}
 
 			SDL_SetRenderTarget(renderer, nullptr);
@@ -62,5 +79,29 @@ void renderUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font){
 			ui.dirty=false;
 		}
 		SDL_RenderTexture(renderer, ui.tex, nullptr, &ui.r);
+
+
+		//HANDLE EVENTS
+		if (ui.focused){
+			SDL_FPoint localLeftClick = {
+				leftclick.x - ui.r.x,
+				leftclick.y - ui.r.y
+			};
+
+			for (auto& piece: ui.pieces){
+				SDL_FRect r={
+					static_cast<float>(piece->relativePos.x),
+					static_cast<float>(piece->relativePos.y),
+					piece->width, piece->height};
+
+				bool clicked = SDL_PointInRectFloat(&localLeftClick, &r);
+
+				if (piece->type==UIType::BUTTON && clicked){
+					std::cout << "BUTTON PRESSED OMG" << std::endl;
+					if (piece->function) piece->function();
+				}
+			}
+		}
 	}
+
 }

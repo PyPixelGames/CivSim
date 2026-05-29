@@ -1,10 +1,12 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include <functional>
 #include "types.hpp"
 
 enum UIType{
-	TEXT
+	TEXT,
+	BUTTON
 };
 
 enum UIColors{
@@ -16,7 +18,12 @@ enum UIColors{
 
 struct UIPiece{
 	UIType type = UIType::TEXT;
+
 	Pos relativePos={10, 10};
+	float width=50;
+	float height=50;
+
+	std::function<void()> function;
 
 	std::string name;
 
@@ -31,7 +38,7 @@ struct UIPiece{
 };
 
 struct FloatingUI{
-	SDL_FRect r = {100, 100, 100, 100};
+	SDL_FRect r = {10, 100, 500, 500};
 	std::unordered_map<UIColors, SDL_Color> colors;
 
 	std::vector<std::unique_ptr<UIPiece>> pieces;
@@ -41,8 +48,8 @@ struct FloatingUI{
 	bool dirty=true;
 	SDL_Texture* tex=nullptr;
 
-	bool focused;
-	bool open;
+	bool focused=false;
+	bool open=true;
 
 	FloatingUI(){
 		colors[UIColors::MAIN]={225, 225, 225, 255};
@@ -52,4 +59,4 @@ struct FloatingUI{
 	}
 };
 
-void renderUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font);
+void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, SDL_FPoint& leftclick);

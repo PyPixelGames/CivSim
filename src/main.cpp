@@ -83,7 +83,8 @@ int main() {
 
 	std::unordered_map<int64_t, Chunk> world;
 
-	float Mx, My;
+	SDL_FPoint MousePos;
+	SDL_FPoint leftclick={-1, -1};
 
 	GameState state=GameState::GAME;
 	uint32_t keyPressed;
@@ -139,15 +140,30 @@ int main() {
 	std::vector<FloatingUI*> allUI;
 
 	FloatingUI testUI;
-	testUI.r.w=500;
-	testUI.r.h=600;
 	testUI.focused=true;
 	testUI.open=true;
+	allUI.push_back(&testUI);
 
 	auto testText=std::make_unique<UIPiece>();
 	testText->name="This text looks fine";
 	testUI.pieces.push_back(std::move(testText));
-	allUI.push_back(&testUI);
+
+
+
+	FloatingUI testUI2;
+	testUI2.open=true;
+	testUI2.r.x=600;
+	allUI.push_back(&testUI2);
+
+	auto testButton = std::make_unique<UIPiece>();
+	testButton->type=UIType::BUTTON;
+	testButton->name="close";
+	testButton->relativePos={100, 100};
+	testButton->function=[&testUI](){
+		testUI.open = !testUI.open;
+	};
+	testUI2.pieces.push_back(std::move(testButton));
+
 
 	std::cout << "\n\n##########MAIN LOOP##########" << std::endl;
 	while (running) {
@@ -164,7 +180,7 @@ int main() {
 		if (deltaTime > 0.05f)
 			deltaTime = 0.05f;
 
-		SDL_GetMouseState(&Mx, &My);
+		SDL_GetMouseState(&MousePos.x, &MousePos.y);
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_EVENT_QUIT) {
 				running = false;
@@ -182,25 +198,33 @@ int main() {
 			}
 			if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
 				if (event.button.button == SDL_BUTTON_LEFT) {
-					SDL_FPoint p = {Mx, My};
-					bool clickedOnUI=false;
-					for (auto ui: allUI){
-						if (SDL_PointInRectFloat(&p, &ui->r)){
+					leftclick = MousePos;
+
+					int index=-1;
+					for (int i = 0; i < allUI.size(); i++) {
+						auto& ui = allUI[i];
+						if (SDL_PointInRectFloat(&MousePos, &ui->r) && ui->open){
+							std::cout<< ui->pieces[0]->name << std::endl;
 							ui->focused=true;
-							ui->open=true;
-							clickedOnUI=true;
+							ui->dirty=true;
+							index=i;
 							break;
 						}
 					}
+
 					//Return to game if no UI was pressed
-					if (!clickedOnUI){
-						state=GameState::GAME;
-						for (auto ui: allUI){
+					for (int i = 0; i < allUI.size(); i++) {
+						if (i!=index){
+							auto& ui = allUI[i];
 							if (ui->focused){
 								ui->focused=false;
-								ui->open=false;
+								ui->dirty=true;
+								//ui->open=false;
 							}
 						}
+					}
+					if (index == -1){
+						state=GameState::GAME;
 						if (SDL_TextInputActive(window)) {
 							SDL_StopTextInput(window);
 						}
@@ -346,7 +370,7 @@ int main() {
 		// Always update
 		bool uiState=false;
 		for (auto ui: allUI){
-			renderUI(renderer, *ui, UIFont);
+			updateUI(renderer, *ui, UIFont, leftclick);
 			if(ui->focused){
 				uiState=true;
 				SDL_StartTextInput(window);
@@ -360,6 +384,7 @@ int main() {
 			state=GameState::GAME;
 		}
 
+		leftclick={-1, -1};
 		keyPressed=-1;
 		inputText="";
 		SDL_RenderPresent(renderer);
