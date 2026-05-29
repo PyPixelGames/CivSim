@@ -87,17 +87,18 @@ void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mou
 				mouse.left.x - ui.r.x,
 				mouse.left.y - ui.r.y
 			};
-
 			SDL_FPoint leftClick = {
 				static_cast<float>(mouse.left.x),
 				static_cast<float>(mouse.left.y)
 			};
 
 
+			//DRAG
+			SDL_FRect dragRect={ui.r.x, ui.r.y, ui.r.w, 20};
 			if (mouse.left.x != -1 && mouse.left.y!=-1){
 				ui.dragOffset=localLeftClick;
 			}
-			if (SDL_PointInRectFloat(&mouse.pos, &ui.r)){
+			if (SDL_PointInRectFloat(&mouse.pos, &dragRect)){
 				if (mouse.holdingLeft && mouse.holding){
 					std::cout << "holding" << std::endl;
 					ui.r.x=mouse.pos.x-ui.dragOffset.x;
@@ -105,7 +106,7 @@ void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mou
 				}
 			}
 
-
+			// PIECES UPDATE
 			for (auto& piece: ui.pieces){
 				SDL_FRect r={
 					static_cast<float>(piece->relativePos.x),
