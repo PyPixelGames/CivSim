@@ -1,10 +1,13 @@
 #include "ui.hpp"
 #include "helper.hpp"
+#include <SDL3/SDL_rect.h>
 #include <SDL3/SDL_render.h>
 
 
 void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mouse){
 	if (ui.open){
+		SDL_FRect dragRect={ui.r.x, ui.r.y, ui.r.w, 20};
+
 		//RENDER
 		if (ui.dirty){
 			if (ui.tex) {
@@ -22,18 +25,22 @@ void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mou
 
 
 			SDL_FRect fillRect = {0, 0, ui.r.w, ui.r.h};
+			SDL_FRect fillRectSmall = {bWidth, bWidth, ui.r.w-(bWidth*2), ui.r.h-(bWidth*2)};
+			SDL_FRect fillDragRect = {bWidth, bWidth, dragRect.w-(2*bWidth), dragRect.h-(bWidth)};
+
+			setColor(renderer,ui.colors[UIColors::BORDER]);
+			SDL_RenderFillRect(renderer, &fillRect);
+
 			if (ui.focused){
-				setColor(renderer,ui.colors[UIColors::BORDER]);
-				SDL_RenderFillRect(renderer, &fillRect);
-
-
-				SDL_FRect fillRectSmall = {bWidth, bWidth, ui.r.w-(bWidth*2), ui.r.h-(bWidth*2)};
 				setColor(renderer,ui.colors[UIColors::BG]);
-				SDL_RenderFillRect(renderer, &fillRectSmall);
 			}else{
-				setColor(renderer,ui.colors[UIColors::BG]);
-				SDL_RenderFillRect(renderer, &fillRect);
+				SDL_Color c = ui.colors[UIColors::BG];
+				setColor(renderer, {c.r, c.g, c.b, 200});
 			}
+			SDL_RenderFillRect(renderer, &fillRectSmall);
+
+			setColor(renderer,ui.colors[UIColors::ACCENT]);
+			SDL_RenderFillRect(renderer, &fillDragRect);
 
 
 			for (auto& piece: ui.pieces){
@@ -68,7 +75,7 @@ void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mou
 				}
 
 				if (piece->type==UIType::BUTTON){
-					setColor(renderer,piece->colors[UIColors::BG]);
+					setColor(renderer,piece->colors[UIColors::MAIN]);
 					SDL_RenderFillRect(renderer, &r);
 				}
 			}
@@ -94,15 +101,21 @@ void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mou
 
 
 			//DRAG
-			SDL_FRect dragRect={ui.r.x, ui.r.y, ui.r.w, 20};
 			if (mouse.left.x != -1 && mouse.left.y!=-1){
-				ui.dragOffset=localLeftClick;
+				if (SDL_PointInRectFloat(&leftClick, &dragRect)){
+					ui.dragOffset=localLeftClick;
+					ui.dragging=true;
+					std::cout << "Initiate drag" << std::endl;
+				}
 			}
-			if (SDL_PointInRectFloat(&mouse.pos, &dragRect)){
-				if (mouse.holdingLeft && mouse.holding){
-					std::cout << "holding" << std::endl;
+
+			if (mouse.holding && ui.draggable){
+				if (mouse.holdingLeft && ui.dragging){
 					ui.r.x=mouse.pos.x-ui.dragOffset.x;
 					ui.r.y=mouse.pos.y-ui.dragOffset.y;
+				}else{
+					ui.dragging=false;
+					ui.dragOffset={-1, -1};
 				}
 			}
 

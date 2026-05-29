@@ -33,8 +33,13 @@ int main() {
 		return 1;
 	}
 
-	SDL_Window *window =
-		SDL_CreateWindow("SDL3 CivSim", 0, 0, SDL_WINDOW_FULLSCREEN);
+	SDL_DisplayID displayID = SDL_GetPrimaryDisplay();
+	const SDL_DisplayMode *mode = SDL_GetCurrentDisplayMode(displayID);
+
+	int screenW = mode ? mode->w : 1920;
+	int screenH = mode ? mode->h : 1080;
+
+	SDL_Window *window = SDL_CreateWindow("SDL3 CivSim", screenW, screenH, SDL_WINDOW_FULLSCREEN);
 	if (!window) {
 		std::cerr << "SDL_CreateWindow failed: " << SDL_GetError() << "\n";
 		TTF_Quit();
@@ -53,9 +58,10 @@ int main() {
 
 	bool vsync = true;
 	SDL_SetRenderVSync(renderer, vsync);
+	SDL_SetRenderLogicalPresentation(renderer, 1920, 1080, SDL_LOGICAL_PRESENTATION_LETTERBOX);
 
 	int width = 0, height = 0;
-	SDL_GetRenderOutputSize(renderer, &width, &height);
+	SDL_GetWindowSize(window, &width, &height);
 
 	float cellSize = 64;
 	int worldX = 0;
@@ -80,6 +86,8 @@ int main() {
 
 	bool running = true;
 	SDL_Event event;
+
+	bool stateSwitch=false;
 
 	std::unordered_map<int64_t, Chunk> world;
 
@@ -144,24 +152,43 @@ int main() {
 	allUI.push_back(&testUI);
 
 	auto testText=std::make_unique<UIPiece>();
-	testText->name="This text looks fine";
+	testText->name="30@This text looks fine";
+	testText->relativePos={10, 70};
 	testUI.pieces.push_back(std::move(testText));
 
 
-
 	FloatingUI testUI2;
+	testUI2.r.w=300;
+	testUI2.r.h=150;
+	testUI2.r.x=static_cast<float>(width-testUI2.r.w);
+	testUI2.r.y=0;
+	testUI2.draggable=false;
 	testUI2.open=true;
-	testUI2.r.x=600;
 	allUI.push_back(&testUI2);
 
 	auto testButton = std::make_unique<UIPiece>();
 	testButton->type=UIType::BUTTON;
 	testButton->name="close";
-	testButton->relativePos={100, 100};
+	testButton->relativePos={50, 75-static_cast<int>(testButton->height/2)};
 	testButton->function=[&testUI](){
 		testUI.open = !testUI.open;
 	};
 	testUI2.pieces.push_back(std::move(testButton));
+
+	auto testButton2 = std::make_unique<UIPiece>();
+	testButton2->type=UIType::BUTTON;
+	testButton2->name="update";
+	testButton2->relativePos={150, 75-static_cast<int>(testButton2->height/2)};
+	testButton2->function=[&testUI, &testCiv](){
+		if (testCiv.creatures.size()){
+			std::string s = "The creatures pos is (x:" + std::to_string(testCiv.creatures[0]->pos.x) +
+				", y:" + std::to_string(testCiv.creatures[0]->pos.y)+")";
+			testUI.pieces[0]->name=s;
+			testUI.dirty=true;
+		}
+	};
+	testUI2.pieces.push_back(std::move(testButton2));
+
 
 
 	std::cout << "\n\n##########MAIN LOOP##########" << std::endl;
@@ -180,6 +207,9 @@ int main() {
 			deltaTime = 0.05f;
 
 		SDL_MouseButtonFlags MouseButtons=SDL_GetMouseState(&mouse.pos.x, &mouse.pos.y);
+		mouse.holdingLeft=MouseButtons & SDL_BUTTON_LMASK;
+		mouse.holdingRight=MouseButtons & SDL_BUTTON_RMASK;
+
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_EVENT_QUIT) {
 				running = false;
@@ -203,7 +233,6 @@ int main() {
 					for (int i = 0; i < allUI.size(); i++) {
 						auto& ui = allUI[i];
 						if (SDL_PointInRectFloat(&mouse.pos, &ui->r) && ui->open){
-							std::cout<< ui->pieces[0]->name << std::endl;
 							ui->focused=true;
 							ui->dirty=true;
 							index=i;
@@ -223,11 +252,14 @@ int main() {
 						}
 					}
 					if (index == -1){
-						state=GameState::GAME;
-						if (SDL_TextInputActive(window)) {
-							SDL_StopTextInput(window);
+						if (state==GameState::UI){
+							state=GameState::GAME;
+							stateSwitch=true;
+							mouse.holdingLeft=true;
+							if (SDL_TextInputActive(window)) {
+								SDL_StopTextInput(window);
+							}
 						}
-						std::cout << std::endl;
 					}
 				}
 			}
@@ -235,53 +267,58 @@ int main() {
 
 		const bool *keys = SDL_GetKeyboardState(nullptr);
 
-		auto zoomAround = [&](float newCellSize) {
-			if (newCellSize < 8.0f)
-				return;
-			float scale = newCellSize / cellSize;
-			worldX = (int)((worldX + mouse.pos.x) * scale - mouse.pos.x);
-			worldY = (int)((worldY + mouse.pos.y) * scale - mouse.pos.y);
-			if (worldX < 0)
-				worldX = 0;
-			if (worldY < 0)
-				worldY = 0;
-			cellSize = newCellSize;
+		std::cout << mouse.holdingLeft << std::endl;
 
-			int newBakeSize;
-			if (cellSize >= 32)
-				newBakeSize = ogBakeSize;
-			else if (cellSize >= 16)
-				newBakeSize = ogBakeSize / 2;
-			else
-				newBakeSize = ogBakeSize / 16;
+		if (!mouse.holdingLeft && !mouse.holdingRight && stateSwitch) {
+			stateSwitch = false;
+		}
 
-			if (newBakeSize != bakeSize) {
-				bakeSize = newBakeSize;
-				for (auto &[key, chunk] : world) {
-					if (chunk.tex) {
-						SDL_DestroyTexture(chunk.tex);
-						chunk.tex = nullptr;
+		if (state==GameState::GAME){
+			auto zoomAround = [&](float newCellSize) {
+				if (newCellSize < 8.0f)
+					return;
+				float scale = newCellSize / cellSize;
+				worldX = (int)((worldX + mouse.pos.x) * scale - mouse.pos.x);
+				worldY = (int)((worldY + mouse.pos.y) * scale - mouse.pos.y);
+				if (worldX < 0)
+					worldX = 0;
+				if (worldY < 0)
+					worldY = 0;
+				cellSize = newCellSize;
+
+				int newBakeSize;
+				if (cellSize >= 32)
+					newBakeSize = ogBakeSize;
+				else if (cellSize >= 16)
+					newBakeSize = ogBakeSize / 2;
+				else
+					newBakeSize = ogBakeSize / 16;
+
+				if (newBakeSize != bakeSize) {
+					bakeSize = newBakeSize;
+					for (auto &[key, chunk] : world) {
+						if (chunk.tex) {
+							SDL_DestroyTexture(chunk.tex);
+							chunk.tex = nullptr;
+						}
 					}
 				}
-			}
-		};
+			};
 
-		mouse.holdingLeft=MouseButtons & SDL_BUTTON_LMASK;
-		mouse.holdingRight=MouseButtons & SDL_BUTTON_RMASK;
-		if (state==GameState::GAME){
-			if (mouse.holdingLeft) {
+
+			if (mouse.holdingLeft && !stateSwitch) {
 				zoomAround(cellSize + sizeChange * deltaTime);
 			}
-			if (mouse.holdingRight) {
+			if (mouse.holdingRight && !stateSwitch) {
 				zoomAround(cellSize - sizeChange * deltaTime);
 			}
 
-			if (keys[SDL_SCANCODE_D] && worldX < levelSizeX)
+			if (keys[SDL_SCANCODE_D] && worldX < (int)(levelSizeX * cellSize))
 				worldX += (int)(movingSpeed * deltaTime);
 			if (keys[SDL_SCANCODE_A] && worldX > 0)
 				worldX -= (int)(movingSpeed * deltaTime);
 
-			if (keys[SDL_SCANCODE_S] && worldY < levelSizeY)
+			if (keys[SDL_SCANCODE_S] && worldY < (int)(levelSizeY * cellSize))
 				worldY += (int)(movingSpeed * deltaTime);
 			if (keys[SDL_SCANCODE_W] && worldY > 0)
 				worldY -= (int)(movingSpeed * deltaTime);
@@ -361,8 +398,10 @@ int main() {
 			updateAccumulator = 0;
 			nextUpdateStep = false;
 
-			// testCiv.evolve(world);
-			testCiv.update(world);
+			if (state==GameState::GAME){
+				// testCiv.evolve(world);
+				testCiv.update(world);
+			}
 		}
 
 		// Always update

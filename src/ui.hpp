@@ -31,10 +31,10 @@ struct UIPiece{
 	std::unordered_map<UIColors, SDL_Color> colors;
 
 	UIPiece(){
-		colors[UIColors::MAIN]={0, 0, 0, 255};
-		colors[UIColors::BG]={45, 45, 45, 255};
-		colors[UIColors::ACCENT]={0, 125, 125, 255};
-		colors[UIColors::BORDER]={255, 0, 0, 255};
+		colors[UIColors::MAIN]={ 208, 252, 179, 255};
+		colors[UIColors::BG]={34, 34, 59, 255};
+		colors[UIColors::ACCENT]={186, 50, 79, 255};
+		colors[UIColors::BORDER] ={77, 126, 168, 255};
 	}
 };
 
@@ -45,7 +45,10 @@ struct FloatingUI{
 	std::vector<std::unique_ptr<UIPiece>> pieces;
 
 	Pos originPos;
+
 	SDL_FPoint dragOffset;
+	bool dragging=false;
+	bool draggable=true;
 
 	bool dirty=true;
 	SDL_Texture* tex=nullptr;
@@ -54,10 +57,10 @@ struct FloatingUI{
 	bool open=true;
 
 	FloatingUI(){
-		colors[UIColors::MAIN]={225, 225, 225, 255};
-		colors[UIColors::BG]={0, 125, 125, 255};
-		colors[UIColors::ACCENT]={125, 0, 125, 255};
-		colors[UIColors::BORDER]={0, 0, 0, 255};
+		colors[UIColors::MAIN]={ 208, 252, 179, 255};
+		colors[UIColors::BG]={34, 34, 59, 255};
+		colors[UIColors::ACCENT]={186, 50, 79, 255};
+		colors[UIColors::BORDER] ={77, 126, 168, 255};
 	}
 };
 
