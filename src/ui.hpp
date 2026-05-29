@@ -1,4 +1,5 @@
 #pragma once
+#include <SDL3/SDL_rect.h>
 #include <iostream>
 #include <vector>
 #include <functional>
@@ -44,6 +45,7 @@ struct FloatingUI{
 	std::vector<std::unique_ptr<UIPiece>> pieces;
 
 	Pos originPos;
+	SDL_FPoint dragOffset;
 
 	bool dirty=true;
 	SDL_Texture* tex=nullptr;
@@ -59,4 +61,4 @@ struct FloatingUI{
 	}
 };
 
-void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, SDL_FPoint& leftclick);
+void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mouse);

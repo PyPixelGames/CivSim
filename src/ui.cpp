@@ -3,7 +3,7 @@
 #include <SDL3/SDL_render.h>
 
 
-void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, SDL_FPoint& leftclick){
+void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mouse){
 	if (ui.open){
 		//RENDER
 		if (ui.dirty){
@@ -84,9 +84,27 @@ void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, SDL_FPoint
 		//HANDLE EVENTS
 		if (ui.focused){
 			SDL_FPoint localLeftClick = {
-				leftclick.x - ui.r.x,
-				leftclick.y - ui.r.y
+				mouse.left.x - ui.r.x,
+				mouse.left.y - ui.r.y
 			};
+
+			SDL_FPoint leftClick = {
+				static_cast<float>(mouse.left.x),
+				static_cast<float>(mouse.left.y)
+			};
+
+
+			if (mouse.left.x != -1 && mouse.left.y!=-1){
+				ui.dragOffset=localLeftClick;
+			}
+			if (SDL_PointInRectFloat(&mouse.pos, &ui.r)){
+				if (mouse.holdingLeft && mouse.holding){
+					std::cout << "holding" << std::endl;
+					ui.r.x=mouse.pos.x-ui.dragOffset.x;
+					ui.r.y=mouse.pos.y-ui.dragOffset.y;
+				}
+			}
+
 
 			for (auto& piece: ui.pieces){
 				SDL_FRect r={
@@ -97,10 +115,10 @@ void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, SDL_FPoint
 				bool clicked = SDL_PointInRectFloat(&localLeftClick, &r);
 
 				if (piece->type==UIType::BUTTON && clicked){
-					std::cout << "BUTTON PRESSED OMG" << std::endl;
 					if (piece->function) piece->function();
 				}
 			}
+
 		}
 	}
 

@@ -83,9 +83,7 @@ int main() {
 
 	std::unordered_map<int64_t, Chunk> world;
 
-	SDL_FPoint MousePos;
-	SDL_FPoint leftclick={-1, -1};
-	short int holding=-5;
+	Mouse mouse;
 
 	GameState state=GameState::GAME;
 	uint32_t keyPressed;
@@ -181,7 +179,7 @@ int main() {
 		if (deltaTime > 0.05f)
 			deltaTime = 0.05f;
 
-		SDL_GetMouseState(&MousePos.x, &MousePos.y);
+		SDL_MouseButtonFlags MouseButtons=SDL_GetMouseState(&mouse.pos.x, &mouse.pos.y);
 		while (SDL_PollEvent(&event)) {
 			if (event.type == SDL_EVENT_QUIT) {
 				running = false;
@@ -199,12 +197,12 @@ int main() {
 			}
 			if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
 				if (event.button.button == SDL_BUTTON_LEFT) {
-					leftclick = MousePos;
+					mouse.left = {static_cast<int>(mouse.pos.x), static_cast<int>(mouse.pos.y)};
 
 					int index=-1;
 					for (int i = 0; i < allUI.size(); i++) {
 						auto& ui = allUI[i];
-						if (SDL_PointInRectFloat(&MousePos, &ui->r) && ui->open){
+						if (SDL_PointInRectFloat(&mouse.pos, &ui->r) && ui->open){
 							std::cout<< ui->pieces[0]->name << std::endl;
 							ui->focused=true;
 							ui->dirty=true;
@@ -237,15 +235,12 @@ int main() {
 
 		const bool *keys = SDL_GetKeyboardState(nullptr);
 
-		float mx, my;
-		SDL_MouseButtonFlags MouseButtons = SDL_GetMouseState(&mx, &my);
-
 		auto zoomAround = [&](float newCellSize) {
 			if (newCellSize < 8.0f)
 				return;
 			float scale = newCellSize / cellSize;
-			worldX = (int)((worldX + mx) * scale - mx);
-			worldY = (int)((worldY + my) * scale - my);
+			worldX = (int)((worldX + mouse.pos.x) * scale - mouse.pos.x);
+			worldY = (int)((worldY + mouse.pos.y) * scale - mouse.pos.y);
 			if (worldX < 0)
 				worldX = 0;
 			if (worldY < 0)
@@ -271,11 +266,13 @@ int main() {
 			}
 		};
 
+		mouse.holdingLeft=MouseButtons & SDL_BUTTON_LMASK;
+		mouse.holdingRight=MouseButtons & SDL_BUTTON_RMASK;
 		if (state==GameState::GAME){
-			if (MouseButtons & SDL_BUTTON_LMASK) {
+			if (mouse.holdingLeft) {
 				zoomAround(cellSize + sizeChange * deltaTime);
 			}
-			if (MouseButtons & SDL_BUTTON_RMASK) {
+			if (mouse.holdingRight) {
 				zoomAround(cellSize - sizeChange * deltaTime);
 			}
 
@@ -371,7 +368,7 @@ int main() {
 		// Always update
 		bool uiState=false;
 		for (auto ui: allUI){
-			updateUI(renderer, *ui, UIFont, leftclick);
+			updateUI(renderer, *ui, UIFont, mouse);
 			if(ui->focused){
 				uiState=true;
 				SDL_StartTextInput(window);
@@ -385,13 +382,8 @@ int main() {
 			state=GameState::GAME;
 		}
 
-		if (leftclick.x>=0 && leftclick.y>=0) leftclick={-1, -1};
-		if (leftclick.x<=holding && leftclick.y<=holding){
-			std::cout << "holding" << std::endl;
-		}else{
-			leftclick.x-=1*deltaTime;
-			leftclick.y-=1*deltaTime;
-		}
+
+		mouse.complete();
 		keyPressed=-1;
 		inputText="";
 		SDL_RenderPresent(renderer);

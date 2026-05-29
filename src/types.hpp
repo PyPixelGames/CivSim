@@ -33,6 +33,7 @@ enum GameState{
 	PAUSED
 };
 
+
 namespace TextColor {
     const std::string reset   = "\033[0m";
     const std::string bold    = "\033[1m";
@@ -145,8 +146,41 @@ struct Pos {
 	bool operator==(const Pos& other) const {
 		return x == other.x && y == other.y;
 	}
+	bool operator!=(const Pos& other) const {
+		return x != other.x && y != other.y;
+	}
 
 	int distance(const Pos& other) const {
 		return std::abs(x - other.x) + std::abs(y - other.y);
+	}
+};
+
+struct Mouse{
+	SDL_FPoint pos;
+	Pos left;
+	Pos right;
+
+	short int h=0;
+	short int holdingMargin=7;
+	bool holding=false;
+
+	bool holdingLeft=false;
+	bool holdingRight=false;
+
+	void complete(){
+		left={-1,-1};
+		right={-1,-1};
+
+		if (holdingLeft || holdingRight){
+			if (h >= holdingMargin){
+				h=holdingMargin;
+				holding=true;
+			}else{
+				h++;
+			}
+		}else{
+			h=0;
+			holding=false;
+		}
 	}
 };
