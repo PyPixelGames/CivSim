@@ -148,58 +148,6 @@ int main() {
 
 	std::vector<FloatingUI*> allUI;
 
-	FloatingUI* testUI = new FloatingUI();
-	testUI->open=false;
-	testUI->unfocus();
-	allUI.push_back(testUI);
-
-	auto testText=std::make_unique<UIPiece>();
-	testText->name="30@This text looks fine";
-	testText->relativePos={10, 70};
-	testUI->pieces.push_back(std::move(testText));
-
-	auto testInput=std::make_unique<UIPiece>();
-	testInput->name="Pu Pu Pu";
-	testInput->relativePos={10, 300};
-	testInput->width=300;
-	testInput->type=UIType::INPUT;
-	testUI->pieces.push_back(std::move(testInput));
-
-	FloatingUI* testUI2 = new FloatingUI();
-	testUI2->open=true;
-	testUI2->focused=false;
-	testUI2->r.w=300;
-	testUI2->r.h=150;
-	testUI2->r.x=static_cast<float>(width-testUI2->r.w);
-	testUI2->r.y=0;
-	testUI2->draggable=false;
-	allUI.push_back(testUI2);
-
-	auto testButton = std::make_unique<UIPiece>();
-	testButton->type=UIType::BUTTON;
-	testButton->name="close";
-	testButton->relativePos={50, 75-static_cast<int>(testButton->height/2)};
-	testButton->function=[&testUI](){
-		testUI->open = !testUI->open;
-	};
-	testUI2->pieces.push_back(std::move(testButton));
-
-	auto testButton2 = std::make_unique<UIPiece>();
-	testButton2->type=UIType::BUTTON;
-	testButton2->name="update";
-	testButton2->relativePos={150, 75-static_cast<int>(testButton2->height/2)};
-	testButton2->function=[&testUI, &testCiv](){
-		if (testCiv.creatures.size()){
-			std::string s = "30@The creatures pos is (x:" + std::to_string(testCiv.creatures[0]->pos.x) +
-				", y:" + std::to_string(testCiv.creatures[0]->pos.y)+")";
-			testUI->pieces[0]->name=s;
-			testUI->dirty=true;
-		}
-	};
-	testUI2->pieces.push_back(std::move(testButton2));
-
-
-
 	std::cout << "\n\n##########MAIN LOOP##########" << std::endl;
 	while (running) {
 		frameCount++;
