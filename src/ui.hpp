@@ -46,7 +46,7 @@ struct FloatingUI{
 
 	std::vector<std::unique_ptr<UIPiece>> pieces;
 
-	Pos originPos;
+	Pos originPos={-1, -1};
 
 	SDL_FPoint dragOffset;
 	bool dragging=false;
@@ -55,8 +55,10 @@ struct FloatingUI{
 	bool dirty=true;
 	SDL_Texture* tex=nullptr;
 
-	bool focused=false;
+	bool focused=true;
 	bool open=true;
+
+	bool singleUse=false;
 
 	FloatingUI(){
 		colors[UIColors::MAIN]={ 208, 252, 179, 255};
@@ -67,6 +69,7 @@ struct FloatingUI{
 
 	void unfocus(){
 		focused=false;
+		dirty=true;
 		for (auto& p: pieces){
 			p->focused=false;
 		}

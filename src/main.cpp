@@ -1,3 +1,12 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_keycode.h>
+#include <SDL3_image/SDL_image.h>
+#include <SDL3_ttf/SDL_ttf.h>
+
 #include "civ.hpp"
 #include "creature.hpp"
 #include "helper.hpp"
@@ -5,12 +14,6 @@
 #include "logs.hpp"
 #include "types.hpp"
 #include "ui.hpp"
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_keycode.h>
-#include <SDL3_image/SDL_image.h>
-#include <SDL3_ttf/SDL_ttf.h>
-#include <iostream>
-#include <vector>
 
 using namespace TextColor;
 unsigned int seed = std::random_device{}();
@@ -145,40 +148,41 @@ int main() {
 
 	std::vector<FloatingUI*> allUI;
 
-	FloatingUI testUI;
-	testUI.focused=true;
-	testUI.open=true;
-	allUI.push_back(&testUI);
+	FloatingUI* testUI = new FloatingUI();
+	testUI->open=false;
+	testUI->unfocus();
+	allUI.push_back(testUI);
 
 	auto testText=std::make_unique<UIPiece>();
 	testText->name="30@This text looks fine";
 	testText->relativePos={10, 70};
-	testUI.pieces.push_back(std::move(testText));
+	testUI->pieces.push_back(std::move(testText));
 
 	auto testInput=std::make_unique<UIPiece>();
 	testInput->name="Pu Pu Pu";
 	testInput->relativePos={10, 300};
 	testInput->width=300;
 	testInput->type=UIType::INPUT;
-	testUI.pieces.push_back(std::move(testInput));
+	testUI->pieces.push_back(std::move(testInput));
 
-	FloatingUI testUI2;
-	testUI2.r.w=300;
-	testUI2.r.h=150;
-	testUI2.r.x=static_cast<float>(width-testUI2.r.w);
-	testUI2.r.y=0;
-	testUI2.draggable=false;
-	testUI2.open=true;
-	allUI.push_back(&testUI2);
+	FloatingUI* testUI2 = new FloatingUI();
+	testUI2->open=true;
+	testUI2->focused=false;
+	testUI2->r.w=300;
+	testUI2->r.h=150;
+	testUI2->r.x=static_cast<float>(width-testUI2->r.w);
+	testUI2->r.y=0;
+	testUI2->draggable=false;
+	allUI.push_back(testUI2);
 
 	auto testButton = std::make_unique<UIPiece>();
 	testButton->type=UIType::BUTTON;
 	testButton->name="close";
 	testButton->relativePos={50, 75-static_cast<int>(testButton->height/2)};
 	testButton->function=[&testUI](){
-		testUI.open = !testUI.open;
+		testUI->open = !testUI->open;
 	};
-	testUI2.pieces.push_back(std::move(testButton));
+	testUI2->pieces.push_back(std::move(testButton));
 
 	auto testButton2 = std::make_unique<UIPiece>();
 	testButton2->type=UIType::BUTTON;
@@ -188,11 +192,11 @@ int main() {
 		if (testCiv.creatures.size()){
 			std::string s = "30@The creatures pos is (x:" + std::to_string(testCiv.creatures[0]->pos.x) +
 				", y:" + std::to_string(testCiv.creatures[0]->pos.y)+")";
-			testUI.pieces[0]->name=s;
-			testUI.dirty=true;
+			testUI->pieces[0]->name=s;
+			testUI->dirty=true;
 		}
 	};
-	testUI2.pieces.push_back(std::move(testButton2));
+	testUI2->pieces.push_back(std::move(testButton2));
 
 
 
@@ -223,14 +227,106 @@ int main() {
 				SDL_GetRenderOutputSize(renderer, &width, &height);
 			}
 			if (event.type == SDL_EVENT_KEY_DOWN) {
-				if (event.key.key == SDLK_ESCAPE)
-					running = false;
 				keyboard.keyPressed = event.key.key;
+
+				if (event.key.key == SDLK_ESCAPE){
+					running=false;
+				}
 			}
 			if (event.type == SDL_EVENT_TEXT_INPUT) {
 				keyboard.input=event.text.text;
 			}
 			if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
+				if (event.button.button == SDL_BUTTON_RIGHT){
+					if (state==GameState::GAME){
+						Pos selectedCell = {
+							static_cast<int>((mouse.pos.x + worldX) / cellSize),
+							static_cast<int>((mouse.pos.y + worldY) / cellSize)
+						};
+
+						FloatingUI* cellUI = new FloatingUI();
+						cellUI->focused = true;
+						cellUI->singleUse = true;
+
+						cellUI->originPos = {
+							static_cast<int>((selectedCell.x * cellSize) - worldX + (cellSize / 2.0f)),
+							static_cast<int>((selectedCell.y * cellSize) - worldY + (cellSize / 2.0f))
+						};
+
+						cellUI->r.w = 300;
+						cellUI->r.h = 300;
+
+						int offset = chunkW;
+
+						if (mouse.pos.x <= static_cast<int>(screenW / 2)) {
+							cellUI->r.x = std::floor(mouse.pos.x + offset);
+						} else {
+							cellUI->r.x = std::floor(mouse.pos.x - offset - cellUI->r.w);
+						}
+
+						if (mouse.pos.y <= static_cast<int>(screenH / 2)) {
+							cellUI->r.y = std::floor(mouse.pos.y + offset);
+						} else {
+							cellUI->r.y = std::floor(mouse.pos.y - offset - cellUI->r.h);
+						}
+
+						allUI.push_back(cellUI);
+
+
+						Cell c = checkCell(world, selectedCell);
+
+						auto cellInfo = std::make_unique<UIPiece>();
+						cellInfo->relativePos = {55, 25};
+						std::string s = std::to_string(selectedCell.x) + "  " + std::to_string(selectedCell.y);
+						cellInfo->name = s;
+						cellUI->pieces.push_back(std::move(cellInfo));
+
+						auto cellAtlasBGR = std::make_unique<UIPiece>();
+						cellAtlasBGR->type=UIType::INPUT;
+						cellAtlasBGR->relativePos={10, 50};
+						cellAtlasBGR->width=50;
+						cellAtlasBGR->name = std::to_string(c.bg.row);
+
+						auto cellAtlasBGC = std::make_unique<UIPiece>(*cellAtlasBGR);
+						cellAtlasBGC->relativePos={110, 50};
+						cellAtlasBGC->name = std::to_string(c.bg.column);
+
+						auto cellAtlasFGB = std::make_unique<UIPiece>(*cellAtlasBGR);
+						cellAtlasFGB->relativePos={10, 150};
+						cellAtlasFGB->name = std::to_string(c.fg.row);
+
+						auto cellAtlasFGC = std::make_unique<UIPiece>(*cellAtlasBGR);
+						cellAtlasFGC->relativePos={110, 150};
+						cellAtlasFGC->name = std::to_string(c.fg.column);
+
+						cellUI->pieces.push_back(std::move(cellAtlasBGR));
+						cellUI->pieces.push_back(std::move(cellAtlasBGC));
+						cellUI->pieces.push_back(std::move(cellAtlasFGB));
+						cellUI->pieces.push_back(std::move(cellAtlasFGC));
+
+
+						auto submit = std::make_unique<UIPiece>();
+						submit->type = UIType::BUTTON;
+						submit->relativePos = {55, 230};
+						submit->function = [&world, cellUI, selectedCell](){
+							int buttonStart=1;
+							Cell change;
+							change.bg.row=std::stoi(cellUI->pieces[buttonStart]->name);
+							change.bg.column=std::stoi(cellUI->pieces[buttonStart+1]->name);
+							change.fg.row=std::stoi(cellUI->pieces[buttonStart+2]->name);
+							change.fg.column=std::stoi(cellUI->pieces[buttonStart+3]->name);
+
+							if (change.bg.row!=-1 && change.bg.column!=-1) change.bg.state=true;
+							if (change.fg.row!=-1 && change.fg.column!=-1) change.fg.state=true;
+
+							changeCell(world, selectedCell, change);
+							std::cout << change.bg.row << " " << change.bg.column << std::endl;
+						};
+
+						cellUI->pieces.push_back(std::move(submit));
+
+					}
+				}
 				if (event.button.button == SDL_BUTTON_LEFT) {
 					mouse.left = {static_cast<int>(mouse.pos.x), static_cast<int>(mouse.pos.y)};
 
@@ -252,7 +348,6 @@ int main() {
 							auto& ui = allUI[i];
 							if (ui->focused){
 								ui->unfocus();
-								ui->dirty=true;
 								//ui->open=false;
 							}
 						}
@@ -268,10 +363,11 @@ int main() {
 						}
 					}
 				}
+
 			}
 		}
 
-		const bool *keys = SDL_GetKeyboardState(nullptr);
+		keyboard.keysHeld = SDL_GetKeyboardState(nullptr);
 		if (!mouse.holdingLeft && !mouse.holdingRight && stateSwitch) {
 			stateSwitch = false;
 		}
@@ -309,21 +405,21 @@ int main() {
 			};
 
 
-			if (mouse.holdingLeft && !stateSwitch) {
+			if (keyboard.keysHeld[SDL_SCANCODE_E] && !stateSwitch) {
 				zoomAround(cellSize + sizeChange * deltaTime);
 			}
-			if (mouse.holdingRight && !stateSwitch) {
+			if (keyboard.keysHeld[SDL_SCANCODE_Q] && !stateSwitch) {
 				zoomAround(cellSize - sizeChange * deltaTime);
 			}
 
-			if (keys[SDL_SCANCODE_D] && worldX < (int)(levelSizeX * cellSize))
+			if (keyboard.keysHeld[SDL_SCANCODE_D] && worldX < (int)(levelSizeX * cellSize))
 				worldX += (int)(movingSpeed * deltaTime);
-			if (keys[SDL_SCANCODE_A] && worldX > 0)
+			if (keyboard.keysHeld[SDL_SCANCODE_A] && worldX > 0)
 				worldX -= (int)(movingSpeed * deltaTime);
 
-			if (keys[SDL_SCANCODE_S] && worldY < (int)(levelSizeY * cellSize))
+			if (keyboard.keysHeld[SDL_SCANCODE_S] && worldY < (int)(levelSizeY * cellSize))
 				worldY += (int)(movingSpeed * deltaTime);
-			if (keys[SDL_SCANCODE_W] && worldY > 0)
+			if (keyboard.keysHeld[SDL_SCANCODE_W] && worldY > 0)
 				worldY -= (int)(movingSpeed * deltaTime);
 
 			if (keyboard.keyPressed==SDLK_F) {
@@ -407,12 +503,25 @@ int main() {
 		// Always update
 		bool uiState=false;
 		for (auto ui: allUI){
+			if (ui->originPos!=Pos{-1, -1}){
+				setColor(renderer, {255, 0, 0, 255});
+				SDL_RenderLine(renderer,
+						ui->r.x+ui->r.w/2,
+						ui->r.y+ui->r.h/2,
+						ui->originPos.x,
+						ui->originPos.y);
+			}
+
 			updateUI(renderer, *ui, UIFont, mouse, keyboard);
 			if(ui->focused){
 				uiState=true;
 				SDL_StartTextInput(window);
 			}
 		}
+
+		allUI.erase(std::remove_if(allUI.begin(), allUI.end(), [](const FloatingUI* ui){
+					return ui->singleUse && !ui->focused;
+					}), allUI.end());
 
 		//Update state
 		if (uiState){

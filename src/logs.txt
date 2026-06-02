@@ -4,7 +4,7 @@ Init fine
 population of chunks with blanks complete
 
 
-3420312733
+2307943254
 rivers stuck: 0
 rivers small: 0
 World generation complete
@@ -13,36 +13,14 @@ World generation complete
 
 
 ##########MAIN LOOP##########
-FIND FOOD
-Found bush: 10, 3
-Path constructed
-Reached Bush
-
-FIND FOOD
-Found bush: 10, 5
-Path constructed
-Reached Bush
-
+1 1
+1 1
+1 1
+1 1
+-1 -1
+Not enough creatures to evolve (need at least 2)
+Not enough creatures to evolve (need at least 2)
+Not enough creatures to evolve (need at least 2)
 ##########MAIN LOOP##########
-
-Amount of creatures: 1
-
---- STATS ---
-ID 0 fitness: 0.00178336
-
-Best: 
-
---- ID: 0 ---
-Fitness: 0.00178336
-
-iq: 37.7276
-agility: 2.7131
-sight: 105.231
-foodLove: 0.422783
---------
-
-Improvement: 0
--------------
-
 
 unloaded

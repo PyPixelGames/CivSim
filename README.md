@@ -1,6 +1,6 @@
 # Civilization Simulation
 
-This is a little hobby project with the goal of creating a procedurally generated world with creatures that can evolve, hunt for food, start wars and rule continents.
+This is a "little" hobby project with the goal of creating a procedurally generated world with creatures that can evolve, hunt for food, start wars and rule continents.
 
 ## Current progress:
 

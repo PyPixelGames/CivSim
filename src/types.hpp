@@ -47,7 +47,6 @@ namespace TextColor {
     const std::string cyan    = "\033[36m";
 }
 
-
 enum Tiles{
 	Water = 0,
 	Grass = 1,
@@ -147,8 +146,9 @@ struct Pos {
 	bool operator==(const Pos& other) const {
 		return x == other.x && y == other.y;
 	}
+
 	bool operator!=(const Pos& other) const {
-		return x != other.x && y != other.y;
+		return x != other.x || y != other.y;
 	}
 
 	int distance(const Pos& other) const {
