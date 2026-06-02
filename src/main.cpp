@@ -92,10 +92,9 @@ int main() {
 	std::unordered_map<int64_t, Chunk> world;
 
 	Mouse mouse;
+	Keyboard keyboard;
 
 	GameState state=GameState::GAME;
-	uint32_t keyPressed;
-	std::string inputText="";
 
 	GameFont font;
 	font.baseSize = bakeSize;
@@ -156,6 +155,12 @@ int main() {
 	testText->relativePos={10, 70};
 	testUI.pieces.push_back(std::move(testText));
 
+	auto testInput=std::make_unique<UIPiece>();
+	testInput->name="Pu Pu Pu";
+	testInput->relativePos={10, 300};
+	testInput->width=300;
+	testInput->type=UIType::INPUT;
+	testUI.pieces.push_back(std::move(testInput));
 
 	FloatingUI testUI2;
 	testUI2.r.w=300;
@@ -181,7 +186,7 @@ int main() {
 	testButton2->relativePos={150, 75-static_cast<int>(testButton2->height/2)};
 	testButton2->function=[&testUI, &testCiv](){
 		if (testCiv.creatures.size()){
-			std::string s = "The creatures pos is (x:" + std::to_string(testCiv.creatures[0]->pos.x) +
+			std::string s = "30@The creatures pos is (x:" + std::to_string(testCiv.creatures[0]->pos.x) +
 				", y:" + std::to_string(testCiv.creatures[0]->pos.y)+")";
 			testUI.pieces[0]->name=s;
 			testUI.dirty=true;
@@ -220,10 +225,10 @@ int main() {
 			if (event.type == SDL_EVENT_KEY_DOWN) {
 				if (event.key.key == SDLK_ESCAPE)
 					running = false;
-				keyPressed = event.key.key;
+				keyboard.keyPressed = event.key.key;
 			}
 			if (event.type == SDL_EVENT_TEXT_INPUT) {
-				inputText=event.text.text;
+				keyboard.input=event.text.text;
 			}
 			if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN) {
 				if (event.button.button == SDL_BUTTON_LEFT) {
@@ -233,6 +238,7 @@ int main() {
 					for (int i = 0; i < allUI.size(); i++) {
 						auto& ui = allUI[i];
 						if (SDL_PointInRectFloat(&mouse.pos, &ui->r) && ui->open){
+							ui->focusPieces(&mouse.pos);
 							ui->focused=true;
 							ui->dirty=true;
 							index=i;
@@ -245,7 +251,7 @@ int main() {
 						if (i!=index){
 							auto& ui = allUI[i];
 							if (ui->focused){
-								ui->focused=false;
+								ui->unfocus();
 								ui->dirty=true;
 								//ui->open=false;
 							}
@@ -266,9 +272,6 @@ int main() {
 		}
 
 		const bool *keys = SDL_GetKeyboardState(nullptr);
-
-		std::cout << mouse.holdingLeft << std::endl;
-
 		if (!mouse.holdingLeft && !mouse.holdingRight && stateSwitch) {
 			stateSwitch = false;
 		}
@@ -323,30 +326,27 @@ int main() {
 			if (keys[SDL_SCANCODE_W] && worldY > 0)
 				worldY -= (int)(movingSpeed * deltaTime);
 
-			if (keyPressed==SDLK_F) {
+			if (keyboard.keyPressed==SDLK_F) {
 				updateFreze = !updateFreze;
 				std::cout << "Changed updateFreze to: " << updateFreze << std::endl;
 			}
-			if (keyPressed==SDLK_T) {
+			if (keyboard.keyPressed==SDLK_T) {
 				nextUpdateStep = true;
 			}
-			if (keyPressed==SDLK_E) {
+			if (keyboard.keyPressed==SDLK_E) {
 				testCiv.evolve(world);
 			}
-			if (keyPressed==SDLK_I) {
+			if (keyboard.keyPressed==SDLK_I) {
 				updateInterval += speedChange;
 			}
-			if (keyPressed==SDLK_O && updateInterval >= speedChange) {
+			if (keyboard.keyPressed==SDLK_O && updateInterval >= speedChange) {
 				updateInterval -= speedChange;
 			}
-			if (keyPressed==SDLK_V && updateInterval >= speedChange) {
+			if (keyboard.keyPressed==SDLK_V && updateInterval >= speedChange) {
 				vsync = !vsync;
 				SDL_SetRenderVSync(renderer, vsync);
 			}
 		}else if (state==GameState::UI){
-			if (inputText!=""){
-				std::cout << inputText;
-			}
 		}
 
 		SDL_SetRenderTarget(renderer, nullptr);
@@ -407,7 +407,7 @@ int main() {
 		// Always update
 		bool uiState=false;
 		for (auto ui: allUI){
-			updateUI(renderer, *ui, UIFont, mouse);
+			updateUI(renderer, *ui, UIFont, mouse, keyboard);
 			if(ui->focused){
 				uiState=true;
 				SDL_StartTextInput(window);
@@ -422,9 +422,8 @@ int main() {
 		}
 
 
-		mouse.complete();
-		keyPressed=-1;
-		inputText="";
+		mouse.reset();
+		keyboard.reset();
 		SDL_RenderPresent(renderer);
 	}
 	std::cout << "##########MAIN LOOP##########" << std::endl;

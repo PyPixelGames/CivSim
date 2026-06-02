@@ -7,7 +7,8 @@
 
 enum UIType{
 	TEXT,
-	BUTTON
+	BUTTON,
+	INPUT
 };
 
 enum UIColors{
@@ -26,7 +27,8 @@ struct UIPiece{
 
 	std::function<void()> function;
 
-	std::string name;
+	std::string name="";
+	bool focused=false;
 
 	std::unordered_map<UIColors, SDL_Color> colors;
 
@@ -62,6 +64,29 @@ struct FloatingUI{
 		colors[UIColors::ACCENT]={186, 50, 79, 255};
 		colors[UIColors::BORDER] ={77, 126, 168, 255};
 	}
+
+	void unfocus(){
+		focused=false;
+		for (auto& p: pieces){
+			p->focused=false;
+		}
+	}
+
+	void focusPieces(SDL_FPoint* mousePoint){
+		for (auto& piece: pieces){
+			SDL_FRect rect = {r.x + static_cast<float>(piece->relativePos.x),
+				r.y + static_cast<float>(piece->relativePos.y),
+				piece->width, piece->height};
+
+			bool clicked = SDL_PointInRectFloat(mousePoint, &rect);
+
+			if (clicked){
+				piece->focused=true;
+			}else{
+				piece->focused=false;
+			}
+		}
+	}
 };
 
-void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mouse);
+void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mouse, Keyboard& keyboard);

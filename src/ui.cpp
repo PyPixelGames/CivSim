@@ -4,7 +4,7 @@
 #include <SDL3/SDL_render.h>
 
 
-void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mouse){
+void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mouse, Keyboard& keyboard){
 	if (ui.open){
 		SDL_FRect dragRect={ui.r.x, ui.r.y, ui.r.w, 20};
 
@@ -15,6 +15,7 @@ void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mou
 				ui.tex = nullptr;
 			}
 
+			//RENDER MAIN UI
 			ui.tex = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_TARGET,
 					static_cast<int>(ui.r.w),static_cast<int>(ui.r.h));
 			SDL_SetTextureBlendMode(ui.tex, SDL_BLENDMODE_BLEND);
@@ -42,7 +43,7 @@ void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mou
 			setColor(renderer,ui.colors[UIColors::ACCENT]);
 			SDL_RenderFillRect(renderer, &fillDragRect);
 
-
+			//RENDER PIECES
 			for (auto& piece: ui.pieces){
 				SDL_FRect r={
 					static_cast<float>(piece->relativePos.x),
@@ -78,6 +79,33 @@ void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mou
 					setColor(renderer,piece->colors[UIColors::MAIN]);
 					SDL_RenderFillRect(renderer, &r);
 				}
+
+				if (piece->type==UIType::INPUT){
+					setColor(renderer,piece->colors[UIColors::BORDER]);
+					SDL_RenderFillRect(renderer, &r);
+
+					std::string text;
+					SDL_Color c;
+					if (piece->focused){
+						c=piece->colors[UIColors::MAIN];
+					}else{
+						c=piece->colors[UIColors::BG];
+					}
+
+					TTF_SetFontSize(font, 30);
+					text=piece->name;
+
+					SDL_Texture* textTex=renderText(renderer,text,font,c);
+
+					float w, h;
+					SDL_GetTextureSize(textTex, &w, &h);
+					SDL_FRect dst={
+						static_cast<float>(piece->relativePos.x+10),
+						static_cast<float>(piece->relativePos.y+10),
+						w, h};
+					SDL_RenderTexture(renderer, textTex, nullptr, &dst);
+					SDL_DestroyTexture(textTex);
+				}
 			}
 
 			SDL_SetRenderTarget(renderer, nullptr);
@@ -105,7 +133,6 @@ void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mou
 				if (SDL_PointInRectFloat(&leftClick, &dragRect)){
 					ui.dragOffset=localLeftClick;
 					ui.dragging=true;
-					std::cout << "Initiate drag" << std::endl;
 				}
 			}
 
@@ -121,19 +148,37 @@ void updateUI(SDL_Renderer* renderer, FloatingUI& ui, TTF_Font *font, Mouse& mou
 
 			// PIECES UPDATE
 			for (auto& piece: ui.pieces){
-				SDL_FRect r={
-					static_cast<float>(piece->relativePos.x),
-					static_cast<float>(piece->relativePos.y),
-					piece->width, piece->height};
+				//FOR CLICKS
+				if (mouse.left.x!=-1 && mouse.left.y!=-1){
+					SDL_FRect r={
+						static_cast<float>(piece->relativePos.x),
+						static_cast<float>(piece->relativePos.y),
+						piece->width, piece->height
+					};
+					bool clicked = SDL_PointInRectFloat(&localLeftClick, &r);
 
-				bool clicked = SDL_PointInRectFloat(&localLeftClick, &r);
+					if (piece->type==UIType::BUTTON && clicked){
+						if (piece->function) piece->function();
+					}
+				}
 
-				if (piece->type==UIType::BUTTON && clicked){
-					if (piece->function) piece->function();
+				//FOR GENERAL
+				if (piece->type==UIType::INPUT && piece->focused){
+					if (keyboard.input !=""){
+						piece->name += keyboard.input;
+						ui.dirty=true;
+					}
+
+					if (keyboard.keyPressed != SDLK_UNKNOWN){
+						if (keyboard.keyPressed==SDLK_BACKSPACE){
+							if (!piece->name.empty()){
+								piece->name.pop_back();
+								ui.dirty=true;
+							}
+						}
+					}
 				}
 			}
-
 		}
 	}
-
 }

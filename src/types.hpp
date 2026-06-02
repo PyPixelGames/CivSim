@@ -1,4 +1,5 @@
 #pragma once
+#include <SDL3/SDL_keycode.h>
 #include <iostream>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_render.h>
@@ -167,7 +168,7 @@ struct Mouse{
 	bool holdingLeft=false;
 	bool holdingRight=false;
 
-	void complete(){
+	void reset(){
 		left={-1,-1};
 		right={-1,-1};
 
@@ -182,5 +183,17 @@ struct Mouse{
 			h=0;
 			holding=false;
 		}
+	}
+};
+
+struct Keyboard{
+	SDL_Keycode keyPressed= SDLK_UNKNOWN;
+	const bool *keysHeld = nullptr;
+	std::string input = "";
+
+	void reset(){
+		keyPressed= SDLK_UNKNOWN;
+		keysHeld = nullptr;
+		input = "";
 	}
 };
