@@ -4,7 +4,7 @@ Init fine
 population of chunks with blanks complete
 
 
-2307943254
+128662369
 rivers stuck: 0
 rivers small: 0
 World generation complete
@@ -13,14 +13,6 @@ World generation complete
 
 
 ##########MAIN LOOP##########
-1 1
-1 1
-1 1
-1 1
--1 -1
-Not enough creatures to evolve (need at least 2)
-Not enough creatures to evolve (need at least 2)
-Not enough creatures to evolve (need at least 2)
 ##########MAIN LOOP##########
 
 unloaded
