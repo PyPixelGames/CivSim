@@ -4,12 +4,16 @@
 #include <SDL3_ttf/SDL_ttf.h>
 
 int64_t getKey(int cx, int cy) {
-	return (int64_t(cx) << 32) | int64_t(uint32_t(cy));
+    return (static_cast<int64_t>(cx) << 32) | (static_cast<uint32_t>(cy) & 0xFFFFFFFFULL);
 }
 
-std::pair<int,int> fromKey(int64_t key){
-    int cx = int(key >> 32);
-    int cy = int(key & 0xFFFFFFFF);
+int64_t getKey(Pos p) {
+    return (static_cast<int64_t>(p.x) << 32) | (static_cast<uint32_t>(p.y) & 0xFFFFFFFFULL);
+}
+
+std::pair<int, int> fromKey(int64_t key) {
+    int cx = static_cast<int>(key >> 32);
+    int cy = static_cast<int>(static_cast<uint32_t>(key & 0xFFFFFFFFULL));
     return {cx, cy};
 }
 
@@ -132,8 +136,13 @@ void drawFPS(SDL_Renderer* renderer, GameFont& font, float fps, int x, int y) {
     SDL_RenderTexture(renderer, font.fpsTex, nullptr, &dst);
 }
 
-ChunkCoord toChunk(int x, int y){
-	return { x/chunkW, y/chunkH, x%chunkW, y%chunkH, (y%chunkH)*chunkW+(x%chunkW)};
+ChunkCoord toChunk(int x, int y) {
+    int lx = x & chunkWMask;           // x % chunkW  (no division)
+    int ly = y & chunkHMask;           // y % chunkH
+    return { x >> chunkWBits,          // x / chunkW  (no division)
+             y >> chunkHBits,
+             lx, ly,
+             ly * chunkW + lx };
 }
 
 
@@ -203,15 +212,12 @@ void changeCell(std::unordered_map<int64_t, Chunk>& world, Pos p, Cell c, bool r
     chunk.cells.push_back(cell);
 }
 
-Cell checkCell(std::unordered_map<int64_t, Chunk>& world, Pos p, bool og){
-	ChunkCoord coords = toChunk(p.x, p.y);
-	auto it = world.find(getKey(coords.cx, coords.cy));
-	if (it == world.end()) return Cell{}; // sentinel
-	if (!og){
-		return it->second.c[coords.ly * chunkW + coords.lx];
-	}else{
-		return it->second.ogC[coords.ly * chunkW + coords.lx];
-	}
+Cell* checkCell(std::unordered_map<int64_t, Chunk>& world, Pos p, bool og) {
+    ChunkCoord coords = toChunk(p.x, p.y);
+    auto it = world.find(getKey(coords.cx, coords.cy));
+    if (it == world.end()) return nullptr;
+	if (og) return &it->second.ogC[coords.idx];
+	return &it->second.c[coords.idx];
 }
 
 float clampFloat(float f, float l, float h){

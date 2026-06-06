@@ -4,6 +4,7 @@
 #include "types.hpp"
 #include <unordered_map>
 #include <iostream>
+#include <climits>
 
 
 void Creature::update(std::unordered_map<int64_t,Chunk>& world,
@@ -13,19 +14,20 @@ void Creature::update(std::unordered_map<int64_t,Chunk>& world,
 	standingOn = checkCell(world, pos);
 
 	updateMood(world);
-	if (path.size()>0){
-		Pos nextPos = path.front();
+	if (!path.empty()){
+		Pos nextPos = path.back();
 		updatePosition(world, nextPos);
-		path.erase(path.begin());
+		path.pop_back();
 	}
 }
 
 void Creature::updatePosition(std::unordered_map<int64_t, Chunk>& world,Pos newPos){
-	Cell p = checkCell(world, newPos);
-	p.entity = img;
+	Cell* p = checkCell(world, newPos);
+	if (!p) return;
+	p->entity = img;
 	changeCell(world, pos, Cell{}, true);  // restore
 	pos = newPos;
-	changeCell(world, pos, p, false); // place
+	changeCell(world, pos, *p, false); // place
 }
 
 void Creature::pathFind(std::unordered_map<int64_t, Chunk>& world,Pos targetPos){
@@ -34,8 +36,8 @@ void Creature::pathFind(std::unordered_map<int64_t, Chunk>& world,Pos targetPos)
 		while (search){
 			goal.x = RandomPos(rng);
 			goal.y = RandomPos(rng);
-			Cell c = checkCell(world, goal);
-			if (c.bg.column != Water && c.fg.state!=true){
+			const Cell* c = checkCell(world, goal);
+			if (c->bg.column != Water && c->fg.state!=true){
 				break;
 			}
 		}
@@ -43,9 +45,6 @@ void Creature::pathFind(std::unordered_map<int64_t, Chunk>& world,Pos targetPos)
 		goal=targetPos;
 	}
 	path = astar(pos, goal, world);
-	if (path.size()){
-		std::cout << "Path constructed" << std::endl;
-	}
 }
 
 Pos Creature::lookFor(std::unordered_map<int64_t, Chunk>& world,Cell target){
@@ -71,12 +70,12 @@ Pos Creature::lookFor(std::unordered_map<int64_t, Chunk>& world,Cell target){
 	std::vector<Pos> possiblePositions;
 	for (const auto& key: visibleChunks){
 		Chunk& chunk = world[key];
+		auto [cx, cy] = fromKey(key);
 		if (chunk.find(target)){
 			for (int y=0; y<chunkH; y++){
 				for (int x=0; x<chunkW; x++){
 					Cell c = chunk.c[y * chunkW + x];
 					if (c.mask(target)){
-						auto [cx, cy] = fromKey(key);
 						Pos p = {(cx * chunkW) + x, (cy * chunkH) + y};
 						if (civ->claimedCells.count(getKey(p.x, p.y))) continue;
 						int dist = this->pos.distance(p);
@@ -101,32 +100,40 @@ void Human::updateMood(std::unordered_map<int64_t, Chunk>& world){
 	mood.clamp();
 	meal.clamp();
 
-	if (standingOn.fg.column == bush){
-		std::cout << "Reached Bush\n" << std::endl;
-		Cell c = standingOn;
+	if (standingOn->fg.column == bush && path.empty()){
+		Cell* c = standingOn;
 		goal = {-1, -1};
-		c.fg = {-1, -1};
-		c.fg.state=false;
-		changeCell(world, pos, c, false);
+		c->fg = {-1, -1};
+		c->fg.state=false;
+		changeCell(world, pos, *c, false);
 		civ->claimedCells.erase(getKey(pos.x, pos.y));
 		meal.food = meal.val;
+		changeState("mealInSight", 0.0f);
 	}
-	if (meal.food < meal.val && !path.size() && checkState("mealInSight")!=0.0f){
-		std::cout << "FIND FOOD" << std::endl;
+	if (meal.food < meal.val && checkState("mealInSight")==0.0f){
 		Cell bushCell{};
 		bushCell.fg.column = bush;
 		bushCell.fg.row = -1;
-		bushCell.fg.state=true;
-		bushCell.bg.state=true;
+
+		bool failed=true;
 
 		Pos bushPos = lookFor(world, bushCell);
 		if (bushPos.x!=-1 && bushPos.y!=-1){
-			std::cout << "Found bush: " << bushPos.x << ", " << bushPos.y << std::endl;
 			pathFind(world, bushPos);
-			civ->claimedCells.insert(getKey(bushPos.x, bushPos.y));
-		}else{
-			std::cout << "No bush found" << std::endl;
-			changeState("mealInSight", 0.0f);
+			if (path.size()){
+				civ->claimedCells.insert(getKey(bushPos.x, bushPos.y));
+				changeState("mealInSight", 1.0f);
+				changeState("tries", 0.0f);
+				failed=false;
+			}
+		}
+		if (failed){
+			changeState("tries", checkState("tries")+1.0f);
+			if (checkState("tries")>5){
+				changeState("mealInSight", 0.0f);
+			}else{
+				changeState("mealInSight", 1.0f);
+			}
 		}
 	}
 	if (meal.food<=-meal.val){

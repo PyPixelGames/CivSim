@@ -5,7 +5,7 @@
 class Civ;
 
 using namespace TextColor;
-static std::uniform_int_distribution<int> RandomPos(1, 50);
+static std::uniform_int_distribution<int> RandomPos(1, levelSizeX-5);
 
 struct Mood {
 	short int val=1;
@@ -144,7 +144,7 @@ class Creature {
 		Pos pos{};
 		Pos goal{};
 
-		Cell standingOn;
+		Cell* standingOn;
 		std::unordered_map<std::string, float> state;
 
 		std::vector<Pos> path;
@@ -231,13 +231,14 @@ class Human : public CreatureBase<Human>{
 			img.column=std::uniform_int_distribution<int>(0, 5)(rng);
 			img.state=true;
 
-			Cell c = checkCell(world, pos);
-			c.entity = img;
+			Cell* c = checkCell(world, pos);
+			c->entity = img;
 
-			changeCell(world, pos, c, false);
+			changeCell(world, pos, *c, false);
 			//pathFind(world);
 
-			state.insert({"mealInSight", 1.0f});
+			state.insert({"mealInSight", 0.0f});
+			state.insert({"tries", 0.0f});
 		}
 
 		void updateMood(std::unordered_map<int64_t, Chunk>& world) override;

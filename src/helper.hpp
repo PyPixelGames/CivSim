@@ -6,6 +6,7 @@
 #include <random>
 
 int64_t getKey(int cx, int cy);
+int64_t getKey(Pos p);
 
 std::pair<int,int> fromKey(int64_t key);
 
@@ -28,7 +29,7 @@ void updateVisibleChunks(std::unordered_map<int64_t, Chunk>& world, SDL_Renderer
 
 void changeCell(std::unordered_map<int64_t, Chunk>& world,Pos p,Cell c,bool restore=false);
 
-Cell checkCell(std::unordered_map<int64_t, Chunk>& world, Pos p, bool og=false);
+Cell* checkCell(std::unordered_map<int64_t, Chunk>& world, Pos p, bool og=false);
 
 float clampFloat(float f, float l, float h);
 

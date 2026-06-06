@@ -194,9 +194,10 @@ void generateLevel(std::unordered_map<int64_t, Chunk>& world,SDL_Renderer* rende
 				if (lowestValue.first != lastNeighbour.first){
 					std::vector<Pos> tempPath = astar(lastNeighbour.second,lowestValue.second,
 						world, true);
+					std::reverse(tempPath.begin(), tempPath.end());
 					bool state=false;
 					for (auto p: tempPath){
-						if (checkCell(world, p).bg.column != Water){
+						if (checkCell(world, p)->bg.column != Water){
 							river.push_back(p);
 						}else{state=true;break;}
 					}

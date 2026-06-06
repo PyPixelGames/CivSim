@@ -21,6 +21,12 @@ constexpr int levelSizeY = 640*amount;
 
 constexpr int chunkW = 32;
 constexpr int chunkH = 32;
+constexpr int chunkWBits = 5; // log2(chunkW)
+constexpr int chunkHBits = 5;
+constexpr int chunkWMask = chunkW - 1;  // 0b1111
+constexpr int chunkHMask = chunkH - 1;
+
+
 constexpr int ogBakeSize=64;
 inline int bakeSize=64;
 
@@ -75,14 +81,11 @@ struct Cell {
 	bool mask(const Cell& other) const{
 		bool bgR=(other.bg.row==-1 || bg.row==other.bg.row);
 		bool bgC=(other.bg.column==-1 || bg.column==other.bg.column);
-		bool bgS=(bg.state==other.bg.state);
 
 		bool fgR=(other.fg.row==-1 || fg.row==other.fg.row);
 		bool fgC=(other.fg.column==-1 || fg.column==other.fg.column);
-		bool fgS=(fg.state==other.fg.state);
 
-
-		return (bgR&&bgC&&bgS && fgR&&fgC&&fgS);
+		return (bgR&&bgC && fgR&&fgC);
 	}
 };
 
@@ -122,12 +125,11 @@ struct Chunk {
 	}
 
 	void deletePresense(Cell& cell){
-		if (presentBGR[cell.bg.row]--==0) presentBGR.erase(cell.bg.row);
-		if (presentBGC[cell.bg.column]--==0) presentBGC.erase(cell.bg.column);
-		if (presentFGR[cell.fg.row]--==0) presentFGR.erase(cell.fg.row);
-		if (presentFGC[cell.fg.column]--==0) presentFGC.erase(cell.fg.column);
+		if (cell.bg.row != -1 && --presentBGR[cell.bg.row] == 0) presentBGR.erase(cell.bg.row);
+		if (cell.bg.column != -1 && --presentBGC[cell.bg.column] == 0) presentBGC.erase(cell.bg.column);
+		if (cell.fg.row != -1 && --presentFGR[cell.fg.row] == 0) presentFGR.erase(cell.fg.row);
+		if (cell.fg.column != -1 && --presentFGC[cell.fg.column] == 0) presentFGC.erase(cell.fg.column);
 	}
-
 	bool find(Cell& mask){
 		bool bgr=(mask.bg.row==-1 || presentBGR.count(mask.bg.row));
 		bool bgc=(mask.bg.column==-1 || presentBGC.count(mask.bg.column));
@@ -152,7 +154,9 @@ struct Pos {
 	}
 
 	int distance(const Pos& other) const {
-		return std::abs(x - other.x) + std::abs(y - other.y);
+		int dx = x - other.x;
+		int dy = y - other.y;
+		return static_cast<int>(std::sqrt(dx*dx + dy*dy));
 	}
 };
 
@@ -197,3 +201,7 @@ struct Keyboard{
 		input = "";
 	}
 };
+
+static inline bool walkable(Cell* c){
+	return (c->bg.column != Tiles::Water && c->fg.column != Tiles::Tree);
+}

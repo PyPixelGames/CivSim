@@ -37,17 +37,20 @@ void Civ::evolve(std::unordered_map<int64_t, Chunk>& world){
 			return a.first > b.first;
 			});
 
-	DNA newDNA = scored[0].second->dna.crossover(scored[1].second->dna);
-	Creature* c = scored[0].second->spawn({0, 0}, world, this->id);
+	Pos p = {RandomPos(rng), RandomPos(rng)};
+	if (walkable(checkCell(world, p))){
+		DNA newDNA = scored[0].second->dna.crossover(scored[1].second->dna);
+		Creature* c = scored[0].second->spawn(p, world, this->id);
+		newDNA.mutate();
 
-	newDNA.mutate();
+		c->dna=newDNA;
+		c->parents.push_back(scored[0].second);
+		c->parents.push_back(scored[1].second);
 
-	c->dna=newDNA;
-	c->parents.push_back(scored[0].second);
-	c->parents.push_back(scored[1].second);
+		this->pending.push_back(c);
+		this->id++;
+	}
 
-	this->pending.push_back(c);
-	this->id++;
 }
 
 void Civ::printStats(){

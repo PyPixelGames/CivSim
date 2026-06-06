@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <chrono>
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_keycode.h>
@@ -16,8 +17,8 @@
 #include "ui.hpp"
 
 using namespace TextColor;
-unsigned int seed = std::random_device{}();
-//unsigned int seed = 3781873310;
+//unsigned int seed = std::random_device{}();
+unsigned int seed = 3784600457;
 std::mt19937 rng(seed);
 
 int main() {
@@ -140,7 +141,7 @@ int main() {
 	std::cout << "World generation complete\n-----\n" << std::endl;
 
 	Civ testCiv;
-	for (int i = 0; i < 1; i++) {
+	for (int i = 0; i < 2; i++) {
 		Human *c = new Human({0, i}, world, testCiv.id, &testCiv);
 		testCiv.pending.push_back(c);
 		testCiv.id++;
@@ -148,7 +149,19 @@ int main() {
 
 	std::vector<FloatingUI*> allUI;
 
-	std::cout << "\n\n##########MAIN LOOP##########" << std::endl;
+	Pos s = {1, 1};
+	Pos e = {levelSizeX-5, levelSizeY-5};
+
+
+	auto start = std::chrono::high_resolution_clock::now();
+
+	astar(s, e, world);
+
+	auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = end - start;
+    std::cout << "Waited for " << elapsed.count() << " ms\n";
+
+	std::cout << "\n\n##########MAIN LOOP##########\n" << std::endl;
 	while (running) {
 		frameCount++;
 		Uint64 now = SDL_GetTicks();
@@ -221,7 +234,20 @@ int main() {
 						allUI.push_back(cellUI);
 
 
-						Cell c = checkCell(world, selectedCell);
+						Cell* cell = checkCell(world, selectedCell);
+
+						if (cell->entity.state){
+							for (auto& c : testCiv.creatures){
+								if (c->pos == selectedCell){
+									c->debug();
+									std::cout << c->path.empty() << std::endl;
+									std::cout << (c->meal.food < c->meal.val) << std::endl;
+									std::cout << c->alive << std::endl;
+									std::cout << (c->standingOn->fg.column == bush) << std::endl;
+									std::cout << (c->checkState("mealInSight")!=0.0f) << std::endl;
+								}
+							}
+						}
 
 						auto cellInfo = std::make_unique<UIPiece>();
 						cellInfo->relativePos = {55, 25};
@@ -233,19 +259,19 @@ int main() {
 						cellAtlasBGR->type=UIType::INPUT;
 						cellAtlasBGR->relativePos={10, 50};
 						cellAtlasBGR->width=50;
-						cellAtlasBGR->name = std::to_string(c.bg.row);
+						cellAtlasBGR->name = std::to_string(cell->bg.row);
 
 						auto cellAtlasBGC = std::make_unique<UIPiece>(*cellAtlasBGR);
 						cellAtlasBGC->relativePos={110, 50};
-						cellAtlasBGC->name = std::to_string(c.bg.column);
+						cellAtlasBGC->name = std::to_string(cell->bg.column);
 
 						auto cellAtlasFGB = std::make_unique<UIPiece>(*cellAtlasBGR);
 						cellAtlasFGB->relativePos={10, 150};
-						cellAtlasFGB->name = std::to_string(c.fg.row);
+						cellAtlasFGB->name = std::to_string(cell->fg.row);
 
 						auto cellAtlasFGC = std::make_unique<UIPiece>(*cellAtlasBGR);
 						cellAtlasFGC->relativePos={110, 150};
-						cellAtlasFGC->name = std::to_string(c.fg.column);
+						cellAtlasFGC->name = std::to_string(cell->fg.column);
 
 						cellUI->pieces.push_back(std::move(cellAtlasBGR));
 						cellUI->pieces.push_back(std::move(cellAtlasBGC));
@@ -443,7 +469,7 @@ int main() {
 			nextUpdateStep = false;
 
 			if (state==GameState::GAME){
-				// testCiv.evolve(world);
+				testCiv.evolve(world);
 				testCiv.update(world);
 			}
 		}
@@ -483,7 +509,7 @@ int main() {
 		keyboard.reset();
 		SDL_RenderPresent(renderer);
 	}
-	std::cout << "##########MAIN LOOP##########" << std::endl;
+	std::cout << "\n##########MAIN LOOP##########" << std::endl;
 
 	testCiv.printStats();
 
